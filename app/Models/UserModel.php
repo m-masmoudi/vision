@@ -157,4 +157,28 @@ class UserModel extends Model
 
         return false;
     }
+
+    public function updateLastActive($id)
+	{
+        $db = \Config\Database::connect();
+        $db->table('clients')->where('id', $id)->update(['last_active' => time()]);
+    }
+
+    /**
+     * Get users based on status.
+     *
+     * @param int $status The status to filter by (0 for equals, other for not equals).
+     * @return array The list of users matching the conditions.
+     */
+    public function getUsersByStatus(int $status): array
+    {
+        $builder = $this->builder();
+        $condition = $status == 0 ? '=' : '!=';
+        
+        return $builder
+            ->where("status $condition", 'deleted')
+            ->get()
+            ->getResultArray();
+    }
+
 }

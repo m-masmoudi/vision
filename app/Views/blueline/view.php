@@ -64,7 +64,7 @@
 		<tr id="<?=$value->id;?>" >
 		<td class="option" style="text-align:left;" width="8%">
 		<?php if($invoice->estimate_status != "Invoiced"){ ?>
-				        <button type="button" class="btn-option delete po" data-toggle="popover" data-placement="left" data-content="<a class='btn btn-danger po-delete ajax-silent' href='<?=base_url()?>invoices/item_delete/<?=$invoice->invoice_has_items[$i]->id;?>/<?=$invoice->id;?>'><?=$this->lang->line('application_yes_im_sure');?></a> <button class='btn po-close'><?=$this->lang->line('application_no');?></button> <input type='hidden' name='td-id' class='id' value='<?=$value->id;?>'>" data-original-title="<b><?=$this->lang->line('application_really_delete');?></b>"><i class="fa fa-edit" title="Modifier"></i></button>
+				        <button type="button" class="btn-option delete po" data-bs-toggle="popover" data-placement="left" data-content="<a class='btn btn-danger po-delete ajax-silent' href='<?=base_url()?>invoices/item_delete/<?=$invoice->invoice_has_items[$i]->id;?>/<?=$invoice->id;?>'><?=$this->lang->line('application_yes_im_sure');?></a> <button class='btn po-close'><?=$this->lang->line('application_no');?></button> <input type='hidden' name='td-id' class='id' value='<?=$value->id;?>'>" data-original-title="<b><?=$this->lang->line('application_really_delete');?></b>"><i class="fa fa-edit" title="Modifier"></i></button>
 				        <a href="<?=base_url()?>invoices/item_update/<?=$invoice->invoice_has_items[$i]->id;?>" title="<?=$this->lang->line('application_edit');?>" class="btn-option" data-toggle="mainmodal"><i class="fa fa-edit" title="Modifier"></i></a>
 						<?php } else{ echo '<i class="btn-option fa fa-lock"></i>';}?>
 			</td>

@@ -2,50 +2,31 @@
 
 namespace App\Controllers;
 
-use App\Models\ItemFamilyModel;
 use App\Models\ItemsModel;
+use App\Models\ItemFamilyModel;
 use App\Models\RefTypeOccurencesModel;
 
 class ItemsController extends BaseController
 {
 	protected ItemFamilyModel $itemFamily;
 	protected ItemsModel $item;
-	protected RefTypeOccurencesModel $referentiels, $db;
-	protected $view_data = [];
+	protected RefTypeOccurencesModel $referentiels;
+	
 
 	public function __construct()
 	{
 		$this->itemFamily = new ItemFamilyModel();
 		$this->item = new ItemsModel();
 		$this->referentiels = new RefTypeOccurencesModel();
-		$this->loadDatabase();
-		$this->checkAccess();
+	
+		
 
 
 		$this->view_data['submenu'] = [
 			lang('application_all_items') => 'items'
 		];
 	}
-	private function loadDatabase()
-	{
-		// Assuming database is already set in the configuration
-		$this->db = \Config\Database::connect();
-	}
-
-	private function checkAccess()
-	{
-		if (session()->get('client')) {
-			return redirect()->to('cprojects');
-		} elseif (session()->get('user')) {
-			$access = $this->hasAccessToItems();
-
-			if (!$access) {
-				return redirect()->to('login');
-			}
-		} else {
-			return redirect()->to('login');
-		}
-	}
+	
 
 	private function hasAccessToItems(): bool
 	{
@@ -64,15 +45,19 @@ class ItemsController extends BaseController
 		return false;
 	}
 
-	public function index(): string
+	public function index()
 	{
 		$items = $this->item->getAllItems();
-		foreach ($items as $item) {
-			$item->type = $this->itemFamily->find($item->id_family)->libelle;
+		foreach ($items as &$item) { // Use reference `&` to modify directly
+			$family = $this->itemFamily->find($item['id_family']);
+			$item['type'] = $family ? $family['libelle'] : 'Unknown'; // Add a fallback in case 'libelle' is missing
 		}
-
+		
+         
 		$this->view_data['items'] = $items;
-		return view('invoices/items', $this->view_data);
+	
+
+		return view('blueline/invoices/items', ['view_data'=>$this->view_data]);
 	}
 
 	public function convert(array $data, int $index = 0): array

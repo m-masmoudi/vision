@@ -89,12 +89,12 @@
 		</div>
 
 		<div class="form-group">
-			<label><?=$this->lang->line('application_imap_search');?> <a class="cursor po" rel="popover" data-toggle="popover" data-placement="right" data-content="<?=$this->lang->line('application_imap_search_help');?>" data-original-title="<?=$this->lang->line('application_imap_search');?>"><i class="ion-help-circled"></i></a></label>
+			<label><?=$this->lang->line('application_imap_search');?> <a class="cursor po" rel="popover" data-bs-toggle="popover" data-placement="right" data-content="<?=$this->lang->line('application_imap_search_help');?>" data-original-title="<?=$this->lang->line('application_imap_search');?>"><i class="ion-help-circled"></i></a></label>
 			<input type="text" class="form-control" name="ticket_config_search" value="<?=$settings->ticket_config_search;?>">
 		</div>
 
 		<div class="form-group">
-			<label><?=$this->lang->line('application_postmaster_address');?>  <a class="cursor po" rel="popover" data-toggle="popover" data-placement="right" data-content="<?=$this->lang->line('application_postmaster_help');?>  <a target='_blank' href='https://luxsys.helpscoutdocs.com/article/16-cronjob-configuration'>More help!</a>" data-original-title="<?=$this->lang->line('application_postmaster_address');?>"><i class="ion-help-circled"></i></a></label><br>
+			<label><?=$this->lang->line('application_postmaster_address');?>  <a class="cursor po" rel="popover" data-bs-toggle="popover" data-placement="right" data-content="<?=$this->lang->line('application_postmaster_help');?>  <a target='_blank' href='https://luxsys.helpscoutdocs.com/article/16-cronjob-configuration'>More help!</a>" data-original-title="<?=$this->lang->line('application_postmaster_address');?>"><i class="ion-help-circled"></i></a></label><br>
 			<small style="padding-left:10px"> 
 				<span class="tag">wget <?=base_url()?>postmaster</span>
 			</small>
@@ -195,7 +195,7 @@
 				<td><?=$value->description;?></td>
 				
 				<td class="option" width="8%">
-				        <button type="button" class="btn-option delete po" data-toggle="popover" data-placement="left" data-content="<a class='btn btn-danger po-delete ajax-silent' href='<?=base_url()?>settings/ticket_type/<?=$value->id;?>/delete'><?=$this->lang->line('application_yes_im_sure');?></a> <button class='btn po-close'><?=$this->lang->line('application_no');?></button> <input type='hidden' name='td-id' class='id' value='<?=$value->id;?>'>" data-original-title="<b><?=$this->lang->line('application_really_delete');?></b>"><i class="fa fa-times"></i></button>
+				        <button type="button" class="btn-option delete po" data-bs-toggle="popover" data-placement="left" data-content="<a class='btn btn-danger po-delete ajax-silent' href='<?=base_url()?>settings/ticket_type/<?=$value->id;?>/delete'><?=$this->lang->line('application_yes_im_sure');?></a> <button class='btn po-close'><?=$this->lang->line('application_no');?></button> <input type='hidden' name='td-id' class='id' value='<?=$value->id;?>'>" data-original-title="<b><?=$this->lang->line('application_really_delete');?></b>"><i class="fa fa-times"></i></button>
 				        <a href="<?=base_url()?>settings/ticket_type/<?=$value->id;?>" class="btn-option" data-toggle="mainmodal"><i class="fa fa-edit" title="Modifier"></i></a>
 			</td>
 			
@@ -221,7 +221,7 @@
 				<td><?=$value->description;?></td>
 				
 				<td class="option" width="8%">
-				        <button type="button" class="btn-option delete po" data-toggle="popover" data-placement="left" data-content="<a class='btn btn-danger po-delete ajax-silent' href='<?=base_url()?>settings/ticket_queue/<?=$value->id;?>/delete'><?=$this->lang->line('application_yes_im_sure');?></a> <button class='btn po-close'><?=$this->lang->line('application_no');?></button> <input type='hidden' name='td-id' class='id' value='<?=$value->id;?>'>" data-original-title="<b><?=$this->lang->line('application_really_delete');?></b>"><i class="fa fa-times"></i></button>
+				        <button type="button" class="btn-option delete po" data-bs-toggle="popover" data-placement="left" data-content="<a class='btn btn-danger po-delete ajax-silent' href='<?=base_url()?>settings/ticket_queue/<?=$value->id;?>/delete'><?=$this->lang->line('application_yes_im_sure');?></a> <button class='btn po-close'><?=$this->lang->line('application_no');?></button> <input type='hidden' name='td-id' class='id' value='<?=$value->id;?>'>" data-original-title="<b><?=$this->lang->line('application_really_delete');?></b>"><i class="fa fa-times"></i></button>
 				        <a href="<?=base_url()?>settings/ticket_queue/<?=$value->id;?>" class="btn-option" data-toggle="mainmodal"><i class="fa fa-edit" title="Modifier"></i></a>
 			</td>
 			

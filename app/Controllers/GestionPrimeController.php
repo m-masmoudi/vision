@@ -17,15 +17,13 @@ class GestionPrimeController extends BaseController
 		$this->salarieModel = new SalarieModel();
 
 		// Check user authentication
-		if (!session()->has('user_id')) {
-			return redirect('login');
-		}
+	
 	}
 
 	public function index()
 	{
-		$data['primes'] = $this->primeModel->orderBy('id', 'desc')->findAll();
-		return view("rhpaie/gestionprime", $data);
+		$this->view_data['primes'] = $this->primeModel->orderBy('id', 'desc')->findAll();
+		return view("blueline/rhpaie/gestionprime", ['view_data'=>$this->view_data]);
 	}
 
 	public function create()

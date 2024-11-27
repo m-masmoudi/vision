@@ -2,18 +2,18 @@
 
 namespace App\Controllers;
 
-use App\Models\RefTypeOccurencesModel;
-use App\Models\SalarieModel;
 use App\Models\CongesModel;
+use App\Models\SalarieModel;
 use App\Controllers\BaseController;
+use App\Models\RefTypeOccurencesModel;
 
 class CalendarCongesAbsencesController extends BaseController
 {
 	private RefTypeOccurencesModel $referentiels;
 	private SalarieModel $salariesModel;
 	private CongesModel $congesModel;
-	protected array $view_data = [];
-	protected $theme_view, $db;
+
+	
 
 	public function __construct()
 	{
@@ -21,25 +21,11 @@ class CalendarCongesAbsencesController extends BaseController
 		$this->salariesModel = new SalarieModel();
 		$this->congesModel = new CongesModel();
 
-		$this->handleRedirects();
+		
 		$this->setSubmenu();
 	}
 
-	private function handleRedirects()
-	{
-		if ($this->client) {
-			$link = $this->request->getCookie('fc2_link');
-			return redirect($link ? str_replace("/tickets/", "/ctickets/", $link) : 'cprojects');
-		}
-
-		if (!$this->user) {
-			return redirect('login');
-		}
-
-		if (!$this->hasAccessToCalendar()) {
-			return $this->handleNoAccess();
-		}
-	}
+	
 
 	private function hasAccessToCalendar(): bool
 	{
@@ -49,22 +35,22 @@ class CalendarCongesAbsencesController extends BaseController
 	private function setSubmenu(): void
 	{
 		$this->view_data['submenu'] = [
-			$this->lang->line('application_all') => 'projects/filter/all',
-			$this->lang->line('application_open') => 'projects/filter/open',
-			$this->lang->line('application_closed') => 'projects/filter/closed'
+			lang('application.application_all') => 'projects/filter/all',
+			lang('application.application_open') => 'projects/filter/open',
+			lang('application.application_closed') => 'projects/filter/closed'
 		];
 	}
 
-	public function index(): void
+	public function index()
 	{
 		$events = $this->db->table('t_pasa_conges')
 			->whereIn('statut', ['28'])
 			->get()
-			->getResult();
+			->getResultArray();
 
 		$this->view_data['events_list'] = $this->generateEventList($events);
 		$this->view_data['salaries'] = $this->salariesModel->findAll();
-		$this->content_view = 'calendar_conges/full';
+		return  view('blueline/calendar_conges/full',['view_data'=>$this->view_data]);
 	}
 
 	private function generateEventList(array $events): string
@@ -74,23 +60,31 @@ class CalendarCongesAbsencesController extends BaseController
 
 	private function formatEvent($value): array
 	{
-		$motif = $value->motif;
-		$statut = $value->statut;
+		$motif = $value['motif'];
+		$statut = $value['statut'];
 
 		$result_motif = $this->db->table('ref_type_occurences')->where('id_type_occ', $motif)->get()->getRow();
 		$result_statut = $this->db->table('ref_type_occurences')->where('id_type_occ', $statut)->get()->getRow();
+		$salaireModel=new SalarieModel();
+		
+
 
 		$class = $this->getClassForMotif($motif);
-		$time = ($motif === "162") ? date('H:i', strtotime($value->date_debut)) . ' -- ' . date('H:i', strtotime($value->date_fin)) : '';
-
+		
+		$time = ($motif === "162") ? date('H:i', strtotime($value['date_debut'])) . ' -- ' . date('H:i', strtotime($value['date_fin'])) : '';
+     
+		$salarieData=$salaireModel->find($value['id_salarie']);
+	
+		$nom = isset($salarieData['nom']) ? $salarieData['nom'] : "";
+$prenom = isset($salarieData['prenom']) ? $salarieData['prenom'] : "";
 		return [
-			'title' => "{$value->id_salarie->nom} {$value->id_salarie->prenom} -- {$result_motif->name} {$time}",
-			'start' => $value->date_debut,
-			'end' => date('Y-m-d H:i', strtotime($value->date_fin . '+1 hour')),
+			'title' => "{$nom} {$prenom} -- {$result_motif->name} {$time}",
+			'start' => $value['date_debut'],
+			'end' => date('Y-m-d H:i', strtotime($value['date_fin'] . '+1 hour')),
 			'className' => $class,
 			'modal' => true,
-			'id' => "{$value->id_salarie->nom} {$value->id_salarie->prenom}",
-			'motif' => $result_statut->name,
+			'id' => "{$nom} {$prenom}",
+			'motif' => $result_motif->name,
 		];
 	}
 
@@ -105,7 +99,7 @@ class CalendarCongesAbsencesController extends BaseController
 		};
 	}
 
-	public function update_calendar(int $id = null): void
+	public function update_calendar(int $id = null)
 	{
 		if ($this->request->getMethod() === 'post') {
 			$data = $this->request->getPost();
@@ -121,7 +115,7 @@ class CalendarCongesAbsencesController extends BaseController
 		$this->view_data['item'] = $this->congesModel->find($id);
 
 		$this->theme_view = 'modal';
-		$this->view_data['title'] = $this->lang->line('application_edit_conge');
+		$this->view_data['title'] = lang('application.application_edit_conge');
 		$this->view_data['form_action'] = "Calendar_conges_absences/update_calendar/$id";
 		$this->content_view = 'rhpaie/validateconge';
 	}

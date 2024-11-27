@@ -4,10 +4,10 @@ namespace App\Controllers;
 
 use App\Models\UserModel;
 use App\Models\ModuleModel;
-use App\Models\SettingModel;
-
-use App\Controllers\BaseController;
 use App\Models\ProjectModel;
+
+use App\Models\SettingModel;
+use App\Controllers\BaseController;
 
 class AuthController extends BaseController
 {
@@ -35,7 +35,7 @@ class AuthController extends BaseController
         // }
         return view('blueline/auth/login', ['view_data' => $this->view_data]);
     }
-    
+
     private function handlePasswordReset()
     {
         if (session()->get('reset_password')) {
@@ -106,6 +106,7 @@ class AuthController extends BaseController
         // var_dump($user);
         // die();
         if ($user) {
+            session()->set('user',$user);
             $this->setUserSession($user);
             // return redirect()->to($this->getRedirectUrl($user));
         }
@@ -118,6 +119,8 @@ class AuthController extends BaseController
         $data = $this->view_data;
         return redirect()->route('dashboard');
         //return view('blueline/dashboard/dashboardv2', ['user' => $user]);
+
+        return redirect()->route('dashboard');
     }
     private function setUserSession($user)
     {

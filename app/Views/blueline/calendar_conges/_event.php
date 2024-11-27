@@ -8,25 +8,25 @@
 		<input id="id" type="hidden" name="id" value="<?php echo $event->id; ?>" />
 <?php } ?>
 <div class="form-group ">
-   <label for="title"><?=$this->lang->line('application_title');?> *</label>
+   <label for="title"><?=lang('application.application_title');?> *</label>
    <input type="text" name="title" class="form-control" id="title"  value="<?php if(isset($event)){echo $event->title;} ?>" required/>
 </div>
 <div class="row">
 	<div class="col-md-6">
 		<div class="form-group">
-			<label for="start"><?=$this->lang->line('application_start');?> *</label>
+			<label for="start"><?=lang('application.application_start');?> *</label>
 			<input class="form-control datepicker-time" data-enabletime=true data-dateFormat="Y-m-d H:i" data-altInputClass="form-control"  name="start" id="start" type="text" value="<?php if(isset($event)){echo $event->start;} ?>"  required/>
 		</div>
 	</div>
 	<div class="col-md-6">
 		<div class="form-group">
-			<label for="end"><?=$this->lang->line('application_end');?> *</label>
+			<label for="end"><?=lang('application.application_end');?> *</label>
 			<input class="form-control datepicker-time" data-dateFormat="Y-m-d H:i" data-altInputClass="form-control" data-enabletime=true name="end" id="end" type="text" value="<?php if(isset($event)){echo (($event->end));} ?>" required/>
 		</div>
 	</div>
 </div>
 <div class="form-group">
-	<label for="description"><?=$this->lang->line('application_description');?></label>
+	<label for="description"><?=lang('application.application_description');?></label>
 	<textarea class="input-block-level form-control" rows="5" id="textfield" name="description"><?php if(isset($event)){echo $event->description;} ?></textarea>
 </div>
 <div class="form-group no-border">
@@ -40,10 +40,10 @@
 	<?php
 	//var_dump('test');
 	if(isset($event)){ ?>
-	<a class="btn btn-danger pull-left" href="<?=base_url()?>Calendar_conges_absences/delete/<?=$event->id?>"><?=$this->lang->line('application_delete');?></a>
+	<a class="btn btn-danger pull-left" href="<?=base_url()?>Calendar_conges_absences/delete/<?=$event->id?>"><?=lang('application.application_delete');?></a>
 	<?php } ?>
-	<input type="submit" name="send" class="btn btn-primary" value="<?=$this->lang->line('application_save');?>"/>
-	<a class="btn btn-default" data-dismiss="modal"><?=$this->lang->line('application_close');?></a>
+	<input type="submit" name="send" class="btn btn-primary" value="<?=lang('application.application_save');?>"/>
+	<a class="btn btn-default" data-dismiss="modal"><?=lang('application.application_close');?></a>
 </div>
 <script type="text/javascript">
     $(function () {

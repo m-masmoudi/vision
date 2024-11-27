@@ -96,4 +96,12 @@ class FactureModel extends Model
         return $this->where('project_id', $id)
             ->findAll();
     }
+    public function getInvoices($companyId)
+{
+    return $this->db->table('invoices')
+                    ->where('estimate !=', 0)
+                    ->where('company_id', $companyId)
+                    ->get()
+                    ->getResult();
+}
 }

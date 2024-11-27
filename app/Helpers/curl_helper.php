@@ -1,7 +1,4 @@
 <?php
-
-namespace App\Helpers;
-
 use CodeIgniter\HTTP\RequestInterface;
 
 if (!function_exists('remote_get_contents')) {

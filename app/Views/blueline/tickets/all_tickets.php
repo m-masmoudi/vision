@@ -1,16 +1,14 @@
-<head>
+<!-- <head>
 <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
 
-</head>
+</head> -->
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('content') ?>
 
-<?php   $current_user=$this->db->select('*')
-                ->from('users')
-                ->where('id',$this->session->userdata["user_id"])
-                ->get()
-				->result();
+<?php   $current_user=session()->get('user');
 
-				$current_name=	$current_user[0]->firstname	 ;
-				$current_id=	$current_user[0]->id	 ;
+				$current_name=	$current_user['firstname']	 ;
+				$current_id=	$current_user['id']	 ;
 
 				?>
 
@@ -26,7 +24,7 @@
 		
 		<div class="col-md-8">
 
-		<form>
+		<form class="d-flex justify-content-start gap-3">
 			
 			<div class="col-md-3"  id="select_categorie">
 				<div class="form-group">
@@ -266,3 +264,4 @@ $(document).ready(function() {
    
 });
 </script>  
+<?= $this->endSection() ?>

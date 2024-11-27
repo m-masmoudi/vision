@@ -6,40 +6,42 @@ use App\Models\UserModel;
 use App\Models\ClientModel;
 use App\Models\TicketModel;
 use App\Models\CompanyModel;
-use App\Models\SettingModel;
-use App\Models\RefTypeModel;
 use App\Models\InvoiceModel;
-use App\Models\ProjectModel;
 use App\Models\MessageModel;
-use App\Models\CategorieTicketsModel;
+use App\Models\ProjectModel;
+use App\Models\RefTypeModel;
+use App\Models\SettingModel;
+use Spipu\Html2Pdf\Html2Pdf;
+use App\Models\EstimateModel;
 use App\Models\IntervenantModel;
+use App\Controllers\BaseController;
 use App\Models\ProjectHasFileModel;
 use App\Models\ProjectHasTaskModel;
+use App\Models\CategorieTicketsModel;
 use App\Models\ProjectHasWorkerModel;
+use App\Models\RefTypeOccurencesModel;
 use App\Models\ProjectHasActivityModel;
-use App\Models\ProjectHasTimeSheetModel;
+
 use App\Models\ProjectHasMilestoneModel;
+use App\Models\ProjectHasTimeSheetModel;
 use App\Models\ProjectHasSubProjectModel;
-
-use Spipu\Html2Pdf\Html2Pdf;
 use Spipu\Html2Pdf\Exception\Html2PdfException;
-use CodeIgniter\Exceptions\PageNotFoundException;
 
-use App\Controllers\BaseController;
+use CodeIgniter\Exceptions\PageNotFoundException;
 
 class ProjectsController extends BaseController
 {
 
-	protected $projectModel, $messageModel, $view_data = [];
+	protected $projectModel, $messageModel,$invoiceModel,$db,$referentiels;
 	protected $userModel, $clientModel, $milestoneModel, $categoryTicketModel;
 	protected $companyModel, $projectHasTimeSheetModel, $intervenantModel;
 	protected $settingModel, $ticketModel, $projectHasfileModel, $projectHasSubProjectModel;
-	protected $refTypeModel, $projectHasTaskModel, $projectHasWorkerModel, $projectHasActivityModel;
+	protected $refTypeModel, $projectHasTaskModel, $projectHasWorkerModel, $projectHasActivityModel,$devis;
 
 	protected $natureModel; // need to check the model
 
 	public function __construct()
-	{
+	{ helper('FormatHelper','DateHelper');
 		$this->userModel = new UserModel();
 		$this->ticketModel = new TicketModel();
 		$this->clientModel = new ClientModel();
@@ -48,6 +50,7 @@ class ProjectsController extends BaseController
 		$this->invoiceModel = new InvoiceModel();
 		$this->settingModel = new SettingModel();
 		$this->refTypeModel = new RefTypeModel();
+		$this->referentiels=new RefTypeOccurencesModel();
 		$this->messageModel = new MessageModel();
 		$this->categoryTicketModel = new CategorieTicketsModel();
 		$this->intervenantModel = new IntervenantModel();
@@ -59,21 +62,24 @@ class ProjectsController extends BaseController
 		$this->projectHasActivityModel = new ProjectHasActivityModel();
 		$this->projectHasSubProjectModel = new ProjectHasSubProjectModel();
 		$this->projectHasTimeSheetModel = new ProjectHasTimeSheetModel();
+		$this->devis=new EstimateModel();
 
-		$this->load->database();
+		$this->db = \Config\Database::connect();
 		$this->checkUserAccess();
 	}
 
-	private function checkUserAccess(): void
+	private function checkUserAccess()
 	{
 		if (!session()->get('user') && !session()->get('client')) {
 			return redirect()->to('login');
 		}
 	}
 
-	public function index(): void
+	public function index()
 	{
-		$salariesId = session()->get('user')->salaries_id;
+		// var_dump(session('user'));
+		// die();
+		$salariesId = session()->get('user')['salaries_id'];
 
 		if ($salariesId === null) {
 			$this->view_data['data'] = $this->projectModel->findAll();
@@ -81,12 +87,12 @@ class ProjectsController extends BaseController
 			$this->view_data['data'] = $this->userModel->getProjectsBySalaryId($salariesId);
 		}
 
-		return view('projects/all_projects', $this->view_data);
+		return view('blueline/projects/all_projects', ['view_data' => $this->view_data]);
 	}
 
 
 	//Filtrer les projets
-	public function filter(string $condition): void
+	public function filter(string $condition)
 	{
 		$options = match ($condition) {
 			'open' => 'progress < 100',
@@ -235,8 +241,12 @@ class ProjectsController extends BaseController
 
 	public function view(int $id, ?int $taskId = null)
 	{
-		// Get current user
-		$currentUser = $this->userModel->find($this->session->get('user_id'));
+		$type_id_unite_temps = "40";
+		$this->view_data['unite_temps'] = $this->referentiels->getReferentiels(	$type_id_unite_temps );
+		$this->view_data['project_access'] = FALSE;
+			$this->view_data['invoice_access'] = FALSE;
+			$this->view_data['devis'] = $this->devis->getByIdProject($id);
+		$currentUser = $this->userModel->find(session()->get('user'));
 
 		// Fetch project and related data
 		$project = $this->projectModel->find($id);
@@ -244,36 +254,35 @@ class ProjectsController extends BaseController
 			throw new PageNotFoundException("Project not found");
 		}
 
+	
+
 		$this->view_data['submenu'] = [];
 		$this->view_data['user'] = $currentUser;
 		$this->view_data['project'] = $project;
-
-		$this->view_data['chef_projet'] = $this->userModel->getUserById($project->chef_projet_id);
-		$this->view_data['chef_client'] = $this->clientModel->getUserById($project->sub_client_id);
-		$this->view_data['sub_projects'] = $this->projectHasSubProjectModel->getSubProjectsByProjectId($id);
-
-		// Temps passé sur les tâches des sous projets
-		$subProjectsHeuresPointees = $this->projectModel->getPeriodTickets_Byprojet($id, true, true);
-		$tabSubProjectsHeuresPointees = [];
-		foreach ($subProjectsHeuresPointees as $proj) {
-			$tabSubProjectsHeuresPointees[$proj->project_pere] = $proj;
-		}
-		$this->view_data['tab_sub_projects_heures_pointees'] = $tabSubProjectsHeuresPointees;
-
-		// URLs for actions
+		// var_dump($project['sub_client_id']);
+		// die();
+		$tasks = $this->projectHasTaskModel
+		->where('project_id', $id)
+		->countAllResults();
+	
+	$tasks_done = $this->projectHasTaskModel
+		->where('status', 'done')
+		->where('project_id', $id)
+		->countAllResults();	
+		$projet_heures_pointees =  $this->projectModel->getPeriodTickets_Byprojet($this->view_data['project']['id'], true );
+		$this->view_data['chef_projet'] = $this->userModel->getUserById($project['chef_projet_id']);
+		$this->view_data['chef_client'] = $this->clientModel->getUserById($project['sub_client_id']);
+		$this->view_data['sub_projects'] = $this->projectHasSubProjectModel->findAll($id);
+		$this->view_data['projet_heures_pointees'] = $projet_heures_pointees ;
+		$this->view_data['opentaskspercent'] = ($tasks == 0 ? 0 : $tasks_done/$tasks*100);
+	
 		$this->view_data['url_add_ref'] = "projects/addSousProjet/$id";
 		$this->view_data['url_update_ref'] = 'projects/editSousProjet';
 		$this->view_data['url_delete_ref'] = 'projects/supprimerSousProjet';
 
-		// Get users assigned to the project
-		$this->view_data['users'] = $this->projectHasWorkerModel->getWorkersByProjectId($id);
-
-		// Fetch invoices and quotes
 		$this->view_data['facture'] = $this->invoiceModel->getByIdProject($id);
 		$this->view_data['project_has_invoices'] = $this->invoiceModel->getByIdProject($id);
-		$this->view_data['devis'] = $this->devisModel->getByIdProject($id);
 
-		// Process project invoices
 		if ($this->view_data['project_has_invoices']) {
 			foreach ($this->view_data['project_has_invoices'] as $val) {
 				// Assuming $val contains invoice_id and project_id
@@ -291,7 +300,7 @@ class ProjectsController extends BaseController
 		// Fetch tickets and subjects
 		$this->view_data['ticket'] = $this->ticketModel->getTicketByTypeProjet($id);
 		$this->view_data['subject'] = $this->ticketModel->getTicketSubjectByIdProject($id);
-		$this->view_data['Heures'] = calcul_heure($this->view_data['subject']);
+		$this->view_data['Heures'] = $this->calcul_heure($this->view_data['subject']);
 
 		// Count tasks
 		$tasks = $this->projectHasTaskModel->countTasksByProjectId($id);
@@ -302,7 +311,7 @@ class ProjectsController extends BaseController
 		$this->view_data['assigneduserspercent'] = round($this->view_data['usersassigned'] / $this->view_data['usercountall'] * 100);
 
 		// Statistics
-		$daysOfWeek = getDatesOfWeek();
+		$daysOfWeek = $this->getDatesOfWeek();
 		$this->view_data['dueTasksStats'] = $this->projectHasTaskModel->getDueTaskStats($id, $daysOfWeek[0], $daysOfWeek[6]);
 		$this->view_data['startTasksStats'] = $this->projectHasTaskModel->getStartTaskStats($id, $daysOfWeek[0], $daysOfWeek[6]);
 		$this->view_data["labels"] = "";
@@ -329,36 +338,66 @@ class ProjectsController extends BaseController
 		}
 
 		// Time calculations
-		$this->view_data['time_days'] = round((strtotime($project->end) - strtotime($project->start)) / 3600 / 24);
+		$this->view_data['time_days'] = round((strtotime($project['end']) - strtotime($project['start'])) / 3600 / 24);
 		$this->view_data['time_left'] = $this->view_data['time_days'];
 		$this->view_data['timeleftpercent'] = 100;
 
-		if (strtotime($project->start) < time() && strtotime($project->end) > time()) {
-			$this->view_data['time_left'] = round((strtotime($project->end) - time()) / 3600 / 24);
+		if (strtotime($project['start']) < time() && strtotime($project['end']) > time()) {
+			$this->view_data['time_left'] = round((strtotime($project['end']) - time()) / 3600 / 24);
 			$this->view_data['timeleftpercent'] = $this->view_data['time_left'] / $this->view_data['time_days'] * 100;
 		}
 
-		if (strtotime($project->end) < time()) {
+		if (strtotime($project['end']) < time()) {
 			$this->view_data['time_left'] = 0;
 			$this->view_data['timeleftpercent'] = 0;
 		}
-
+       
 		// User's tasks
-		$this->view_data['allmytasks'] = $this->projectHasTaskModel->where(['project_id' => $id, 'user_id' => $currentUser->id])->findAll();
-		$this->view_data['mytasks'] = $this->projectHasTaskModel->where(['status !=' => 'done', 'project_id' => $id, 'user_id' => $currentUser->id])->countAllResults();
+		$this->view_data['allmytasks'] = $this->projectHasTaskModel->where(['project_id' => $id, 'user_id' => session()->get('user')['id']])->findAll();
+		$this->view_data['mytasks'] = $this->projectHasTaskModel->where(['status !=' => 'done', 'project_id' => $id, 'user_id' => session()->get('user')['id']])->countAllResults();
 		$this->view_data['tasksWithoutMilestone'] = $this->projectHasTaskModel->where(['milestone_id' => 0, 'project_id' => $id])->findAll();
 
 		$tasks_done = $this->projectHasTaskModel->where(['status' => 'done', 'project_id' => $id])->countAllResults();
-		$this->view_data['progress'] = $project->progress;
+		$this->view_data['progress'] = $project['progress'];
 
-		if ($project->progress_calc == 1 && $tasks) {
+		if ($project['progress_calc'] == 1 && $tasks) {
 			$this->view_data['progress'] = round($tasks_done / $tasks * 100);
 			$this->projectModel->update($id, ['progress' => $this->view_data['progress']]);
 		}
 
 		// Load the view
-		return view('projects/view', $this->view_data);
+		return view('blueline/projects/view', ['view_data'=>$this->view_data]);
 	}
+	private  function getDatesOfWeek(){
+        $days = array();
+        $days[] = date("Y-m-d",strtotime('this week monday'));
+        $days[] = date("Y-m-d",strtotime('this week tuesday'));
+        $days[] = date("Y-m-d",strtotime('this week wednesday'));
+        $days[] = date("Y-m-d",strtotime('this week thursday'));
+        $days[] = date("Y-m-d",strtotime('this week friday'));
+        $days[] = date("Y-m-d",strtotime('this week saturday'));
+        $days[] = date("Y-m-d",strtotime('this week sunday'));
+        return $days;
+    }
+	private  function calcul_heure($subj)
+    {
+       
+   $Heures=array();
+   $i=0;
+
+            foreach($subj as $indice =>$content):
+
+                $heures_end = strtotime($content['end']) ;
+                $heures_start = strtotime($content['start']);
+                $nbJoursTimestamp = $heures_end - $heures_start;
+                $Heures[$i] = ($nbJoursTimestamp/86400)*8;	
+                $i++;
+
+            endforeach ;
+            //var_dump($Heures);exit;
+        return  $Heures ;
+
+    }
 
 	public function sortList(string $sort = null, string $list = null)
 	{
@@ -1599,38 +1638,44 @@ class ProjectsController extends BaseController
 	//get project function
 
 	public function getProjects()
-	{
-		$data = [];
-		$this->load->model('Projects_model');
+    {
+        $data = [];
+        
+        $idadmin = $this->user['salaries_id']; // Assuming 'salaries_id' is stored in the session user data
 
-		$idadmin = $this->user->salaries_id;
-		$projects = ($idadmin === NULL) ? $this->projectModel->getRows2($_POST) : $this->projectModel->getRows($_POST);
+        // Fetch projects based on the admin condition
+        $projects = ($idadmin === null) 
+            ? $this->projectModel->getRows2($this->request->getPost()) 
+            : $this->projectModel->getRows($this->request->getPost());
 
-		$i = $_POST['start'];
-		foreach ($projects as $project) {
-			$i++;
-			$data[] = [
-				$project->project_id,
-				$project->project_num,
-				$project->project,
+        $i = $this->request->getPost('start'); // Use getPost() for consistency
+        foreach ($projects as $project) {
+
+			
+            $i++;
+            $data[] = [
+				$project->id,
+				$project->project_num , 
+				$project->project_name,
 				$project->client,
 				$project->start,
 				$project->end,
 				$project->nature,
 				$project->state,
-			];
-		}
+            ];
+        }
 
-		$output = [
-			"draw" => $_POST['draw'],
-			"recordsTotal" => $this->projectModel->countAll($_POST),
-			"recordsFiltered" => ($idadmin === NULL) ? $this->projectModel->countFiltered2($_POST) : $this->projectModel->countFiltered($_POST),
-			"data" => $data,
-		];
+        $output = [
+            "draw" => $this->request->getPost('draw'),
+            "recordsTotal" => $this->projectModel->countAll(), // Use countAll() to get total records
+            "recordsFiltered" => ($idadmin === null) 
+                ? $this->projectModel->countFiltered2($this->request->getPost()) 
+                : $this->projectModel->countFiltered($this->request->getPost()),
+            "data" => $data,
+        ];
 
-		$this->theme_view = 'blank';
-		echo json_encode($output);
-	}
+        return $this->response->setJSON($output); // Return the response as JSON
+    }
 	//$draw = $this->Projects_model->countAll($_POST);
 //$records=$this->Projects_model->countAll($_POST);
 //filtred=$this->Projects_model->countFiltered($_POST);

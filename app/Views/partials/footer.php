@@ -6,7 +6,7 @@
 
             <div style="position: fixed ; right: 0;">
 
-                <div class="btn-group dropup" style="margin-right: 10px;">
+                <div class="btn-group dropup float-end" style="margin-right: 10px;">
 
 
                     <button type="button" class="btn btn-primary dropdown-toggle  " data-toggle="dropdown"
@@ -86,8 +86,15 @@
 
 
 </footer>
-<?php if($view_data['act_uri'] != 'login'){ ?>
-</div> <!-- content area div closing
+<!-- Modal -->
+<div class="modal fade" id="mainModal" tabindex="-1" aria-labelledby="mainModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
+<?php if ($view_data['act_uri'] != 'login') { ?>
+    </div> <!-- content area div closing
 <?php } ?>
 <?= $this->include('partials/scripts') ?>
 

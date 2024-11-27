@@ -2,13 +2,13 @@
 
 namespace App\Controllers;
 
-use App\Models\RefTypeModel;
-use App\Models\RefTypeOccurencesModel;
-use App\Models\ExpenseModel;
 use App\Models\UserModel;
-use App\Models\ProjectModel;
 use App\Models\CompanyModel;
+use App\Models\ExpenseModel;
+use App\Models\ProjectModel;
+use App\Models\RefTypeModel;
 use App\Models\SettingModel;
+use App\Models\RefTypeOccurencesModel;
 
 class ExpensesController extends BaseController
 {
@@ -19,7 +19,7 @@ class ExpensesController extends BaseController
 	protected $projectModel;
 	protected $companyModel;
 	protected $settingModel;
-	protected $view_data = [];
+
 	protected $theme_view, $db;
 
 	public function __construct()
@@ -32,7 +32,7 @@ class ExpensesController extends BaseController
 		$this->companyModel = new CompanyModel();
 		$this->settingModel = new SettingModel();
 
-		$this->checkAccess();
+		
 
 		$this->view_data['submenu'] = [
 			lang('application_all') => 'expenses',
@@ -42,21 +42,21 @@ class ExpensesController extends BaseController
 		];
 	}
 
-	protected function checkAccess()
-	{
-		if (session()->get('user')) {
-			return redirect('cprojects');
-		}
+	// protected function checkAccess()
+	// {
+	// 	if (session()->get('user')) {
+	// 		return redirect('cprojects');
+	// 	}
 
-		if (session()->get('user')) {
-			$access = $this->hasAccessToItems();
-			if (!$access) {
-				return redirect('login');
-			}
-		} else {
-			return redirect('login');
-		}
-	}
+	// 	if (session()->get('user')) {
+	// 		$access = $this->hasAccessToItems();
+	// 		if (!$access) {
+	// 			return redirect('login');
+	// 		}
+	// 	} else {
+	// 		return redirect('login');
+	// 	}
+	// }
 
 	protected function hasAccessToItems(): bool
 	{
@@ -103,7 +103,7 @@ class ExpensesController extends BaseController
 			->where('date <=', "$year-12-31")
 			->findAll();
 
-		$this->content_view = 'expenses/all';
+		return view('blueline/expenses/all',['view_data'=>$this->view_data]);
 	}
 
 	public function filter($userid = null, $year = null, $month = null)

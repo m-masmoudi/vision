@@ -1,12 +1,19 @@
-<?php $statut = $conges['statut'];
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('content') ?>
+<?php 
+
+
+    $statut = $view_data['conges'][0]['statut'];
+
+
 ?>
 
 <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
-<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 
 
 
-	<div class="row">
+
+	<div class="row justify-content-between align-items-center">
 	<div class="col-sm-3">
             <!-- salariés -->
             <div class="form-group">
@@ -15,8 +22,10 @@
 				<option > </option>
 
                     <option value="all">Tous les Statuts</option>
-                    <option value="enattent" <?= $conges['statut'] == 'enattent' ? 'selected' : '' ?>>En attente</option>
-                    <option value="accepter" <?= $conges['statut'] == 'accepter' ? 'selected' : '' ?>>Accepter</option>
+                    <?php if(!empty($view_data['conges'])): ?>
+                    <option value="enattent" <?= $view_data['conges'][0]['statut'] == 'enattent' ? 'selected' : '' ?>>En attente</option>
+                    <option value="accepter" <?= $view_data['conges'][0]['statut'] == 'accepter' ? 'selected' : '' ?>>Accepter</option>
+                    <?php endif ?>
                 </select>
             </div>
         </div>
@@ -30,7 +39,7 @@
 	<div class="col-sm-12  col-md-12 main"> 
 
 
-		<div class="table-head"> <?=$this->lang->line('application_liste_gestionconge');?>
+		<div class="table-head"> <?=lang('application.application_liste_gestionconge');?>
 
         </div>
 
@@ -40,10 +49,10 @@
             
             <thead>
                  <th>Salarié(e)</th>
-                <th><?=$this->lang->line('application_date_debut');?></th>
+                <th><?=lang('application.application_date_debut');?></th>
                 <th>Date Fin</th>
-                <th><?=$this->lang->line('application_motif');?></th>
-                <th><?=$this->lang->line('application_statut');?></th>
+                <th><?=lang('application.application_motif');?></th>
+                <th><?=lang('application.application_statut');?></th>
                 <th>Solde Congés</th>
                 <th>Valider</th>
                 <th>Annuler</th>
@@ -53,17 +62,17 @@
 
             <?php 
 
-            foreach ($conges as $value):    
+            foreach ($view_data['conges'] as $value):    
                      
                 ?>
-                <tr id="<?=$value->statut;?>" >
+                <tr id="<?=$value['statut'];?>" >
               
                     <td class="hidden-xs">
-                        <?php foreach($salaries as $salarie){
+                        <?php foreach($view_data['salaries'] as $salarie){
                          
-                                if($salarie->id == $value->id_salarie)
+                                if($salarie['id'] == $value['id_salarie'])
                                 {
-                                    echo $salarie->nom. ' '.$salarie->prenom ;
+                                    echo $salarie['nom']. ' '.$salarie['prenom'] ;
                                 }
                             ?>
                         <?php }?>
@@ -73,12 +82,12 @@
                     ?>
                     <td class="hidden-xs">
                     
-                    <?php   if($value->motif=="162")
+                    <?php   if($value['motif']=="162")
                     {
-                      echo utf8_encode(strftime('%A %d %B %Y / %H:%M',strtotime($value->date_debut)));
+                      echo utf8_encode(strftime('%A %d %B %Y / %H:%M',strtotime($value['date_debut'])));
 
                     }else{
-                      echo utf8_encode(strftime('%A %d %B %Y',strtotime($value->date_debut)));
+                      echo utf8_encode(strftime('%A %d %B %Y',strtotime($value['date_debut'])));
 
                     }
 
@@ -91,41 +100,41 @@
                   ?>
                  <td class="hidden-xs">
                   
-                  <?php   if($value->motif=="162")
+                  <?php   if($value['motif']=="162")
                   {
-                    echo utf8_encode(strftime('%H:%M',strtotime($value->date_fin)));
+                    echo utf8_encode(strftime('%H:%M',strtotime($value['date_fin'])));
 
                   }else{
-                    echo utf8_encode(strftime('%A %d %B %Y',strtotime($value->date_fin)));
+                    echo utf8_encode(strftime('%A %d %B %Y',strtotime($value['date_fin'])));
 
                   }
 
                   ?>
                 </td>
                     <td class="hidden-xs">
-                            <?php get_texte_occurence($value->motif); ?>
+                            <?php get_texte_occurence($value['motif']); ?>
                     </td>
 
                     <td class="hidden-xs">
 
 
                     
-                    <?php if($value->statut=="123")
+                    <?php if($value['statut']=="123")
                             {?>
                            
-                            <span style="color:red;font-weight:bold"><?php get_texte_occurence($value->statut); ?></span>                    
+                            <span style="color:red;font-weight:bold"><?php get_texte_occurence($value['statut']); ?></span>                    
                             <?php
                           }?>    
-                            <?php if($value->statut=="28")
+                            <?php if($value['statut']=="28")
                             {?>
-                            <span style="color:green;font-weight:bold"><?php get_texte_occurence($value->statut); ?></span>                    
+                            <span style="color:green;font-weight:bold"><?php get_texte_occurence($value['statut']); ?></span>                    
                  
                             <?php
                           }?>  
 
-                    <?php if($value->statut=="162")
+                    <?php if($value['statut']=="162")
                 {?>
-                  <span class="notif" style="color:orange;font-weight:bold"><?php get_texte_occurence($value->statut); ?>
+                  <span class="notif" style="color:orange;font-weight:bold"><?php get_texte_occurence($value['statut']); ?>
                   <i id="test" class="fa fa-bell fa-spin" ></i>
                 </span>                   
 <?php
@@ -134,12 +143,12 @@
 
                     <td class="hidden-xs">
                            
-                          <?php foreach($salaries as $salarie){
+                          <?php foreach($view_data['salaries'] as $salarie){
                                               
                             
-                                              if($salarie->id == $value->id_salarie)
+                                              if($salarie['id'] == $value['id_salarie'])
                                               {
-                                                  echo $salarie->droit_conge ;
+                                                  echo $salarie['droit_conge'] ;
                                               }
                             
                       }?>                           
@@ -148,14 +157,14 @@
                     <td class="hidden-xs">
                     <div class="col-md-5"> 
 
-                         <a href="<?=base_url()?>gestionconge/valider/<?=$value->id?>"  type="submit" ><i class="fad fa-vote-yea" style="font-size:18px;color:green" title="Valider"></i></a>
+                         <a href="<?=base_url()?>gestionconge/valider/<?=$value['id']?>"  type="submit" ><i class="fad fa-vote-yea" style="font-size:18px;color:green" title="Valider"></i></a>
               </div>
               </td>
               <td class="hidden-xs">
 
                          <div class="col-md-5"> 
 
-                          <a href="<?=base_url()?>gestionconge/refuser/<?=$value->id;?>"  type="submit"><i class="fad fa-vote-nay" style="font-size:18px;color:red" title="Annuler"></i></a>
+                          <a href="<?=base_url()?>gestionconge/refuser/<?=$value['id'];?>"  type="submit"><i class="fad fa-vote-nay" style="font-size:18px;color:red" title="Annuler"></i></a>
                  </div>
                             </td>
                 </tr>
@@ -164,7 +173,10 @@
         <br clear="all">
     </div>
 
-
+    <script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
 	<script>
                 var statut = '<?= $statut ?>';
                 var base_url = '<?= base_url() ?>';
@@ -227,3 +239,4 @@
 
 
 
+<?= $this->endSection() ?>

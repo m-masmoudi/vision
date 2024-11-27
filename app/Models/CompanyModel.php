@@ -49,13 +49,14 @@ class CompanyModel extends Model
      * @return array|null
      */
     public function getClientById(int $id): ?array
-    {
-        return $this->db->table('clients')
-            ->select('firstname, lastname')
-            ->where('id', $id)
-            ->get()
-            ->getRowArray();
-    }
+{
+    return $this->db->table('clients')
+        ->select('clients.*, companies.*')
+        ->join('companies', 'companies.id = clients.company_id', 'inner') // Inner join
+        ->where('companies.client_id', $id) // Condition for companies.client_id = 0
+        ->get()
+        ->getResultArray();  // Get a single result as an associative array
+}
 
     /**
      * Get all active clients related to the company.
@@ -65,9 +66,10 @@ class CompanyModel extends Model
     public function getActiveClients(): array
     {
         return $this->db->table('clients')
-            ->where('inactive !=', 1)
-            ->get()
-            ->getResultArray();
+        ->select('clients.*, companies.*')
+        ->join('companies', 'companies.id = clients.company_id', 'left') // Left join to get all clients with or without companies
+        ->get()
+        ->getResultArray();
     }
 
     /**

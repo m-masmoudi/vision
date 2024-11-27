@@ -1,6 +1,7 @@
-
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('content') ?>
 	<div class="col-sm-12  col-md-12 main"> 
-		<div class="row">
+		<div class="mb-2">
 
 			<a href="<?=base_url()?>demandeConge/create" class="btn btn-success" data-toggle="mainmodal">Demande de congés</a>
 			</div>
@@ -14,22 +15,22 @@
 	<div class="col-sm-12  col-md-12 main"> 
 
 		<div class="row"> 
-
+ 
 		<div class="table-head right"></div>
 
 
-	<div class="table-div">
+	<div class="table-div pt-3">
 		<table class="dataSorting table" rel="<?=base_url()?>" cellspacing="0" cellpadding="0">
             
             <thead>
               <th>Action</th>
-                <th><?=$this->lang->line('application_date_debut');?></th>
+                <th><?=lang('application.application_date_debut');?></th>
                 <th>Date Fin</th>
-                <th><?=$this->lang->line('application_motif');?></th>
-                <th><?=$this->lang->line('application_statut');?></th>
+                <th><?=lang('application.application_motif');?></th>
+                <th><?=lang('application.application_statut');?></th>
             </thead>
 
-            <?php foreach ($conges as $value):
+            <?php foreach ($view_data['conges'] as $value):
        
                 ?>
                 <tr >
@@ -41,7 +42,7 @@
                     ?>
                     <td>
                     <a href="<?=base_url()?>demandeConge/updatedemande/<?=$value->id;?>" class="'btn btn-sm btn-info" data-toggle="mainmodal"><i class="fa fa-edit" title="Modifier"></i></a>
-			              <button type="button" class="btn btn-sm btn-danger delete po" data-toggle="popover" data-placement="left" data-content="<a class='btn btn-sm btn-danger po-delete' href='<?=base_url()?>demandeConge/deletedemande/<?=$value->id;?>'><?=$this->lang->line('application_yes_im_sure');?></a> <button class='btn po-close'><?=$this->lang->line('application_no');?></button> <input type='hidden' name='td-id' class='id' value='<?=$value->id;?>'>" data-original-title="<b><?=$this->lang->line('application_really_delete');?></b>"><i class="fa fa-trash" title="Supprimer"></i></button>
+			              <button type="button" class="btn btn-sm btn-danger delete po" data-bs-toggle="popover" data-placement="left" data-content="<a class='btn btn-sm btn-danger po-delete' href='<?=base_url()?>demandeConge/deletedemande/<?=$value->id;?>'><?=lang('application.application_yes_im_sure');?></a> <button class='btn po-close'><?=lang('application.application_no');?></button> <input type='hidden' name='td-id' class='id' value='<?=$value->id;?>'>" data-original-title="<b><?=lang('application.application_really_delete');?></b>"><i class="fa fa-trash" title="Supprimer"></i></button>
                     </td>
                     <td class="hidden-xs">
                     
@@ -92,5 +93,5 @@
         <br clear="all">
     </div>
 
-
+    <?= $this->endSection() ?>
 

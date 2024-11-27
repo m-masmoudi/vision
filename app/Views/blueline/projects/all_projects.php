@@ -1,12 +1,18 @@
+
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('content') ?>
 <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
 
 
-<?php  $user=$this->session->userdata["user_id"];
+<?php  
+// var_dump($view_data['data']);
+// die();
+$user=session()->get("user");
 //$idS = $_GET['iddCategorie'] ;
 //var_dump($idS); exit;
-	$idsal =$this->user->salaries_id ;
-	$sal =$this->salaries->id ;
-$idp =$this->project->id ;
+// 	$idsal =$user['salaries_id'];
+// 	$sal =$salaries['id'];
+// $idp =$project['id'] ;
 		//$this->view_data['project'] = $project; 
 	//	$x=$this->view_data['salaries'] = $this->db->query('select seraffectation from salaries where id = '.$idsal.'');
 			//$w=$this->view_data['project'] = project::find_by_sql('select * from project');
@@ -16,19 +22,19 @@ $idp =$this->project->id ;
 
 
 
-<div class="row">
-<div class="col-md-1">
+<div class="row align-items-center gy-2">
+<div class="col-lg-2 col-md-6">
 
 <a href="projects/create" class="btn btn-primary" data-toggle="mainmodal">Nouveau</a></div>
-<div class="col-md-2">
+<div class="col-lg-2  col-md-6 mb-2">
 <a href="https://vision.bimmapping.com/exportProjet/indexx.php" class="btn btn-primary" data-toggle="mainmodal">Exporter</a>
 <button id="btn-reload" class="btn btn-warning right">Rafraîchir</button>
 
 </div>
-<div class="col-md-8">
+<div class="col-lg-8 col-md-12">
 
-		<form>
-			<div class="col-md-3">
+		<form class="d-lg-flex justify-content-evenly gap-2">
+			<div class="col-lg-3  col-12">
 				<div class="form-group">
 					<label>Etat de Projet</label>
 						<select  id="ddProgress" class="chosen-select" aria-label="Default select example">
@@ -42,7 +48,7 @@ $idp =$this->project->id ;
 			
 				
 				
-						<div class="col-md-3">
+						<div class="col-lg-3 col-12">
 				<div class="form-group">
 					<label>Catégorie de Projet</label>
 						<select  id="ddCategorie" class="chosen-select" aria-label="Default select example" >
@@ -57,7 +63,7 @@ $idp =$this->project->id ;
 				
 			
 			
-			<div class="col-md-3">
+			<div class="col-lg-3 col-12">
 
 				<div class="form-group">
 					<label>Client</label>
@@ -72,7 +78,7 @@ $idp =$this->project->id ;
 
 		</div>
 
-<div class="col-md-2">
+<div class="col-lg-2 col-md-6">
 <a type="button" href="<?=base_url()?>calendar" title="calendrier Projets" class="btn btn-success btn-lg"><span class="fa fa-calendar"></span><br>calendrier Projets</a>
 
 
@@ -81,7 +87,7 @@ $idp =$this->project->id ;
 </div>
 
 <div class="row">
-	<div class="table-head"><?=$this->lang->line('application_projects');?></div>
+	<div class="table-head"><?=lang('application.application_projects');?></div>
 		<div class="table-div">
 	
 		<table class="dataSorting table"  id="projects" cellspacing="0" cellpadding="0">
@@ -279,3 +285,5 @@ $('.table').on('click', 'tbody td', function() {
 	
 
 	</script>  
+
+<?= $this->endSection() ?>

@@ -2,21 +2,21 @@
 
 namespace App\Controllers;
 
-use App\Models\RefTypeOccurencesModel;
-use App\Models\RefTypeModel;
+use App\Models\UserModel;
+use App\Models\ClientModel;
 use App\Models\TicketModel;
 
 
 
-use App\Controllers\BaseController;
-use App\Models\ArticleHasAttachmentModel;
-use App\Models\ClientModel;
 use App\Models\ProjectModel;
+use App\Models\RefTypeModel;
 use App\Models\SettingModel;
-use App\Models\TicketHasArticleModel;
-use App\Models\TicketHasAttachmentModel;
-use App\Models\UserModel;
 use CodeIgniter\Language\Language;
+use App\Controllers\BaseController;
+use App\Models\TicketHasArticleModel;
+use App\Models\RefTypeOccurencesModel;
+use App\Models\TicketHasAttachmentModel;
+use App\Models\ArticleHasAttachmentModel;
 
 class CTicketsController extends BaseController
 {
@@ -49,71 +49,72 @@ class CTicketsController extends BaseController
 
 	protected function initializeSubmenu(): void
 	{
-		$idType = $this->refType->getRefTypeByName("ticket")->id;
+		$refbyname= $this->refType->getRefTypeByName("ticket");
+		$idType =$refbyname['id'];
 		$submenus = $this->referentiels->getReferentielsByIdType($idType);
 		$this->view_data['submenu'] = [];
 
 		foreach ($submenus as $submenu) {
-			$this->view_data['submenu'][$submenu->name] = 'ctickets/filter/' . $submenu->id;
+			$this->view_data['submenu'][$submenu['name']] = 'ctickets/filter/' . $submenu['id'];
 		}
 	}
 
 	protected function initializeCategoryProject(): void
 	{
-		$idType = $this->refType->getRefTypeByName("catégorie projet")->id;
+		$refbyname=$this->refType->getRefTypeByName("catégorie projet");
+		$idType = $refbyname['id'];
 		$categorieProject = $this->referentiels->getReferentielsByIdType($idType);
 
 		// Initialize with a default value
 		$this->view_data['categorie_projet'] = ['Tous' => 'ctickets/categorieprojet/0'];
 
 		foreach ($categorieProject as $cat) {
-			$this->view_data['categorie_projet'][$cat->name] = 'ctickets/categorieprojet/' . $cat->id;
+			$this->view_data['categorie_projet'][$cat['name']] = 'ctickets/categorieprojet/' . $cat['id'];
 		}
 	}
 
 
 	//test
 	public function getTicketsToDatatables()
-	{
-		// Ensure UTF-8 internal encoding
-		mb_internal_encoding('UTF-8');
+{
+    // Ensure UTF-8 internal encoding
+    mb_internal_encoding('UTF-8');
 
-		// Get request data using CodeIgniter's request object
-		$request = service('request');
-		$postData = $request->getPost();
 
-		$data = [];
-		$i = $postData['start'] ?? 0;  // Fallback to 0 if 'start' is not set
+  
+	$request = service('request');
+    $postData = $request->getPost();
+    $data = [];
+	
+    $tickets = $this->ticketModel->getRows($postData);
+	
+	 $i = $_POST['start'];
 
-		// Get tickets from the model
-		$tickets = $this->ticketModel->getRows($postData);
+    // Loop through the tickets and prepare data for DataTables
+    foreach ($tickets as $ticket) {
+        $i++;
+        $data[] = [
+            $ticket['id'],
+			$ticket['reference'],
+            $ticket['subject'],
+            $ticket['project'],
+            $ticket['start'],
+            $ticket['end'],
+            $ticket['collaborater_firstname'] . ' ' . $ticket['collaborater_lastname'],
+           $ticket['type'],
+        ];
+    }
 
-		// Loop through the tickets and prepare data for DataTables
-		foreach ($tickets as $ticket) {
-			$i++;
-			$data[] = [
-				$ticket->ticket_id,
-				$ticket->ticket_id,
-				$ticket->subject,
-				$ticket->project,
-				$ticket->start,
-				$ticket->end,
-				$ticket->collaborater_firstname . ' ' . $ticket->collaborater_lastname,
-				$ticket->type,
-			];
-		}
+    // Prepare output array for DataTables
+    $output = [
+		"draw" => $_POST['draw'],  // Fallback to 1 if 'draw' is not set
+        'recordsTotal' => $this->ticketModel->countAll($_POST),
+        'recordsFiltered' => $this->ticketModel->countFiltered($_POST),
+        'data' => $data,
+    ];
 
-		// Prepare output array for DataTables
-		$output = [
-			'draw' => (int)($postData['draw'] ?? 1),  // Fallback to 1 if 'draw' is not set
-			'recordsTotal' => $this->ticketModel->countAll($postData),
-			'recordsFiltered' => $this->ticketModel->countFiltered($postData),
-			'data' => $data,
-		];
-
-		// Return JSON response
-		return $this->response->setJSON($output);
-	}
+    return $this->response->setJSON($output);
+}
 
 	// Afficher tous les tickets fermés
 	public function closed()
@@ -166,9 +167,9 @@ class CTicketsController extends BaseController
 
 		// Check if the user is an admin and load the appropriate view
 		if ($user && $user['admin'] === "1") {
-			return view('tickets/all_tickets');
+			return view('blueline/tickets/all_tickets',['view_data'=>$this->view_data]);
 		} else {
-			return view('tickets/all_tickets_not_admin');
+			return view('blueline/tickets/all_tickets_not_admin',['view_data'=>$this->view_data]);
 		}
 	}
 
@@ -190,22 +191,22 @@ class CTicketsController extends BaseController
 		// Process tickets to fetch related project, subproject, collaborator, and status
 		foreach ($tickets as $ticket) {
 			// Fetch project if project_id is not null or zero
-			if (!empty($ticket->project_id)) {
-				$ticket->project_id = $this->projectModel->find($ticket->project_id);
+			if (!empty($ticket['project_id'])) {
+				$ticket['project_id'] = $this->projectModel->find($ticket['project_id']);
 			}
 
 			// Fetch sub-project if sub_project_id is not null or zero
-			if (!empty($ticket->sub_project_id)) {
-				$ticket->sub_project_id = $this->projectModel->find($ticket->sub_project_id);
+			if (!empty($ticket['sub_project_id'])) {
+				$ticket['sub_project_id'] = $this->projectModel->find($ticket['sub_project_id']);
 			}
 
 			// Fetch collaborator if collaborater_id is not zero
-			if ($ticket->collaborater_id != 0) {
-				$ticket->collaborater_id = $this->userModel->find($ticket->collaborater_id);
+			if ($ticket['collaborater_id ']!= 0) {
+				$ticket['collaborater_id'] = $this->userModel->find($ticket['collaborater_id']);
 			}
 
 			// Fetch status name using referentiels model
-			$ticket->status = $this->referentiels->getReferentielsById($ticket->status)->name;
+			$ticket['status ']= $this->referentiels->getReferentielsById($ticket['status']);
 		}
 
 		// Pass data to the view
@@ -215,7 +216,7 @@ class CTicketsController extends BaseController
 		];
 
 		// Load the view
-		return view('tickets/all', $data);
+		return view('blueline/tickets/all', $data);
 	}
 
 	//Filtrer sur les types tickets
@@ -426,17 +427,18 @@ class CTicketsController extends BaseController
 			}
 		} else {
 			// Prepare data for the form view
-			$data['title'] = lang('application_create_ticket');
-			$data['collaboraters'] = $this->userModel->where('status', 'active')->findAll();
-			$data['projects'] = $this->projectModel->where('progress !=', 100)->findAll();
+			$this->view_data['title'] = lang('application_create_ticket');
+			$this->view_data['collaboraters'] = $this->userModel->where('status', 'active')->findAll();
+			$this->view_data['projects'] = $this->projectModel->where('progress !=', 100)->findAll();
 
 			// Load status, priority, and other form options
-			$idType = $this->refType->getRefTypeByName('ticket')->id;
-			$data['status'] = $this->referentiels->getReferentielsByIdType($idType);
-			$data['etats'] = $this->referentiels->getReferentielsByIdType($this->config->item('type_id_etat_tache'));
-			$data['priorite'] = $this->referentiels->getReferentielsByIdType($this->config->item('type_id_priorite_tache'));
+			$refType=$this->refType->getRefTypeByName('ticket');
+			$idType = $refType['id'];
+			$this->view_data['status'] = $this->referentiels->getReferentielsByIdType($idType);
+			$this->view_data['etats'] = $this->referentiels->getReferentielsByIdType(config('type_id_etat_tache'));
+			$this->view_data['priorite'] = $this->referentiels->getReferentielsByIdType(config('type_id_priorite_tache'));
 
-			return view('tickets/_ticket', $data);
+			return view('blueline/tickets/_ticket', ['view_data'=>$this->view_data]);
 		}
 	}
 
@@ -628,7 +630,7 @@ class CTicketsController extends BaseController
 	public function view(int $id = null, int $taskId = null)
 	{
 		// Get current user
-		$currentUserId = $this->session->get('user_id');
+		$currentUserId = session()->get('user_id');
 		$currentUser = $this->userModel->find($currentUserId);
 
 		// Load the ticket by ID
@@ -641,26 +643,33 @@ class CTicketsController extends BaseController
 		$this->view_data['periode'] = $this->ticketModel->getPeriodPerTicket($id)->periode ?? null;
 
 		// Load ticket creator's user information
-		$this->view_data['user'] = $this->userModel->find($ticket->user_id);
+		$this->view_data['user'] = $this->userModel->find($ticket['user_id']);
 
 		// Prepare ticket data
-		$ticket->from = $this->getUserFullName($ticket->from);
-		foreach ($ticket->ticket_has_articles as $article) {
-			$article->from = $this->getUserFullName($article->from);
+		$ticket['from'] = $this->getUserFullName($ticket['from']);
+		$tickehasarticlemodel=new TicketHasArticleModel();
+		$tickehasarticle=$tickehasarticlemodel->findAll($ticket['id']);
+		foreach ($tickehasarticle as $article) {
+			$article['from']= $this->getUserFullName($article['from']);
 		}
 
 		// Map status and type names
-		$ticket->status = $this->referentiels->getReferentielsById($ticket->status)->name ?? null;
-		$this->view_data['ticket_type'] = $this->referentiels->getReferentielsById($ticket->type_id)->name ?? null;
+		$ticket['status'] = $this->referentiels->getReferentielsById($ticket['status'])['name']?? null;
+		$this->view_data['ticket_type'] = $this->referentiels->getReferentielsById($ticket['type_id'])['name'] ?? null;
 
 		// Load additional related entities
-		$ticket->collaborater_id = $this->getUserById($ticket->collaborater_id);
-		$ticket->project_id = $this->getProjectById($ticket->project_id);
-		$ticket->sub_project_id = $this->getSubProjectById($ticket->sub_project_id);
+		$ticket['collaborater_id'] = $this->getUserById($ticket['collaborater_id']);
+		$ticket['project_id'] = $this->getProjectById($ticket['project_id']);
+	
+		$ticket['sub_project_id']= $this->getSubProjectById($ticket['sub_project_id']);
+		$attachments = new  TicketHasAttachmentModel();
+		$article=new TicketHasArticleModel();
+		$this->view_data['ticket_has_attachments']=$attachments->where('ticket_id',$ticket['id'])->get()->getResultArray();
+		$this->view_data['ticket_has_articles']=$article->where('ticket_id',$ticket['id'])->get()->getResultArray();
 
 		// Update ticket if the current user is the collaborator
-		if ($ticket->collaborater_id && $ticket->collaborater_id->id === $currentUserId) {
-			$this->ticketModel->update($ticket->id, ['new_created' => 0]);
+		if ($ticket['collaborater_id'] && $ticket['collaborater_id']=== $currentUserId) {
+			$this->ticketModel->update($ticket['id'], ['new_created' => 0]);
 		}
 
 		// Set view data
@@ -668,7 +677,7 @@ class CTicketsController extends BaseController
 		$this->view_data['current_user'] = $currentUser;
 
 		// Render the view
-		return view('tickets/viewdetail', $this->view_data);
+		return view('blueline/tickets/viewdetail', ['view_data'=>$this->view_data]);
 	}
 
 	// Helper function to get full name
@@ -676,26 +685,28 @@ class CTicketsController extends BaseController
 	{
 		if ($userId) {
 			$user = $this->userModel->find($userId);
-			return $user ? "{$user->firstname} {$user->lastname}" : null;
+			return $user ? "{$user['firstname']} {$user['lastname']}" : null;
 		}
 		return null;
 	}
 
 	// Helper function to get user by ID
-	private function getUserById(?int $userId): ?object
+	private function getUserById($userId)
 	{
 		return $userId ? $this->userModel->find($userId) : null;
 	}
 
 	// Helper function to get project by ID
-	private function getProjectById(?int $projectId): ?object
+	private function getProjectById($projectId)
 	{
 		return $projectId ? $this->projectModel->find($projectId) : null;
 	}
 
 	// Helper function to get sub-project by ID
-	private function getSubProjectById(?int $subProjectId): ?object
+	private function getSubProjectById($subProjectId)
 	{
+
+		
 		return $subProjectId ? $this->projectModel->find($subProjectId) : null;
 	}
 

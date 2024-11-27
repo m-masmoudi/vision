@@ -383,6 +383,7 @@ $message_icon = false;
       </div>
       <?php if ($act_uri != 'forgotpass') { ?>
         <div class="topbar noselect">
+         
           <?php $userimage = get_user_pic($this->user->userpic, $this->user->email); ?>
           <span class="inline visible-xs">
             <a href="<?= site_url("agent"); ?>" data-toggle="mainmodal"

@@ -2,8 +2,8 @@
 
 <?= $this->section('content') ?>
 <div class="login-page ">
-  <div class="row">
-    <div class="col-lg-4 col-md-5">
+  <div class="">
+    <div class="">
       <form class="form-signin  " method="post" action="<?= site_url('login') ?>" id="login">
         <div class="logo mb-5 text-center">
           <img src="<?= base_url('assets/blueline/images/logo-vision.png') ?>" alt="Vision logo" />
@@ -48,9 +48,9 @@
               placeholder="<?= lang('application.application_enter_your_password') ?>" required />
           </div>
 
-          <div class="bottom-buttons d-md-flex justify-content-between align-items-center text-center text-lg-start">
+          <div class="bottom-buttons d-flex justify-content-between align-items-center text-center text-lg-start">
 
-            <input type="submit" class="btn btn-primary fadeoutOnClick px-4 py-2" value="<?= lang('login') ?>" />
+            <input type="submit" class="btn btn-primary fadeoutOnClick px-5 py-2" value="<?= lang('login') ?>" />
             <div class="forgotpassword">
               <a href="<?= site_url("forgotpass") ?>"><?= lang('application.application_forgot_password') ?></a>
             </div>

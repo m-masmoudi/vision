@@ -3,24 +3,27 @@
 namespace App\Controllers;
 
 
-use App\Models\SettingModel;
-use App\Models\RefTypeModel;
-use App\Models\RefTypeOccurencesModel;
-use App\Models\CompteBancaireModel;
+use Config\OccConfig;
 use App\Models\UserModel;
-use App\Models\SalarieModel;
+use App\Models\CompanyModel;
 use App\Models\FactureModel;
-
+use App\Models\RefTypeModel;
+use App\Models\SalarieModel;
+use App\Models\SettingModel;
+use App\Models\VCompanieModel;
 use App\Controllers\BaseController;
+use App\Models\CompteBancaireModel;
+use App\Models\CategorieTicketsModel;
+use App\Models\RefTypeOccurencesModel;
 
 class SettingsController extends BaseController
 {
-	protected $refType;
-	protected $referentiels;
-	protected $compteBancaire;
+	protected $refType, $vCompaniesModel;
 	protected $account;
 	protected $salaries;
 	protected $invoice;
+	protected $referentiels;
+	protected $compteBancaire;
 	protected $settingTables;
 
 	public function __construct()
@@ -32,6 +35,7 @@ class SettingsController extends BaseController
 		$this->salaries = new SalarieModel();
 		$this->invoice = new FactureModel();
 		$this->settingTables = new SettingModel();
+		$this->vCompaniesModel = new VCompanieModel();
 
 		if (!session()->get('client') && !session()->get('user')) {
 			return redirect()->to('login');
@@ -45,7 +49,7 @@ class SettingsController extends BaseController
 				lang('application_settings') => 'settings',
 				lang('application_edit_company') => 'settings/editcompany',
 				lang('application_users_access') => 'settings/listUser',
-				lang('application_GestionCommercial') => 'settings/gestionCommercial',
+				lang('application_gestionCommercial') => 'settings/gestionCommercial',
 				lang('application_ref_vente') => 'settings/refvente',
 				lang('application_ref_societe') => 'settings/societe',
 				lang('application_compte_bancaire') => 'settings/compteBancaire',
@@ -62,9 +66,11 @@ class SettingsController extends BaseController
 		}
 
 		// Load default settings
-		$this->config->load('defaults');
-		$option = ["id_vcompanies" => session()->get('current_company')];
+		// $this->config->load('defaults');
+		$current_company = session()->get('current_company');
+		$option = array("id_vcompanies" => $current_company);
 		$this->view_data['settings'] = $this->settingTables->find($option);
+		$this->view_data['update_count'] = FALSE;
 	}
 
 	public function index()
@@ -77,6 +83,7 @@ class SettingsController extends BaseController
 			->get()->getResult();
 		$this->view_data['currencys'] = $currency;
 
+
 		$echeances = $this->db->table('ref_type_occurences')
 			->where(['id_type' => 20, 'visible' => 1])
 			->get()->getResult();
@@ -88,7 +95,7 @@ class SettingsController extends BaseController
 			return redirect()->to('login');
 		}
 
-		return view('settings/settings_all', $this->view_data);
+		return view('blueline/settings/settings_all', ['view_data' => $this->view_data]);
 	}
 
 	public function chiffreDevise($name)
@@ -221,8 +228,8 @@ class SettingsController extends BaseController
 			}
 		} else {
 			if ($dest && $template) {
-				$DBdest = $dest . "_pdf_template";
-				$settings->updateAttributes([$DBdest => 'templates/' . $dest . '/' . $template]);
+				$THIS->DBdest = $dest . "_pdf_template";
+				$settings->updateAttributes([$THIS->DBdest => 'templates/' . $dest . '/' . $template]);
 				return redirect()->to('settings/invoice_templates');
 			} else {
 				$this->view_data['invoice_template_files'] = array_map(fn($file) => str_replace('.php', '', $file), get_filenames('./app/Views/' . $settings->template . '/templates/invoice/'));
@@ -673,19 +680,58 @@ class SettingsController extends BaseController
 
 	public function smtp_settings()
 	{
+		// Get the current company ID from the session
 		$id = $_SESSION['current_company'];
-		$configuration = $this->db->get_where('smtp_conf', ['id_company' => $id])->result();
+		$builder = $this->db->table('smtp_conf');
+		$configuration = $builder->where('id_company', $id)->get()->getResultArray();
 
 		if ($this->request->getMethod() === 'post') {
+			// Call the method to handle the update logic
 			$this->updateSmtpConfig($id);
-			return redirect('settings/smtp_settings');
+			return redirect()->to('settings/smtp_settings');
 		}
 
+		// Prepare configuration data
+		$data = [];
+		if (!empty($configuration)) {
+			$config = $configuration[0]; // Assuming a single configuration per company
+			$data = [
+				"useragent" => $config['useragent'],
+				"protocol" => $config['protocol'],
+				"mailpath" => $config['mailpath'],
+				"smtp_host" => $config['smtp_host'],
+				"smtp_user" => $config['smtp_user'],
+				"smtp_pass" => $config['smtp_pass'],
+				"smtp_port" => $config['smtp_port'],
+				"smtp_timeout" => $config['smtp_timeout'],
+				"smtp_crypto" => $config['smtp_crypto'],
+				"smtp_debug" => $config['smtp_debug'],
+				"wordwrap" => $config['wordwrap'],
+				"wrapchars" => $config['wrapchars'],
+				"mailtype" => $config['mailtype'],
+				"charset" => $config['charset'],
+				"validate" => $config['validate'],
+				"priority" => $config['priority'],
+				"crlf" => $config['crlf'],
+				"newline" => $config['newline'], // Fixed from $dataa
+				"bcc_batch_mode" => $config['bcc_batch_mode'],
+				"bcc_batch_size" => $config['bcc_batch_size'] // Fixed typo
+			];
+		}
+
+		// Pass data to the view
+		$this->view_data['config'] = $data;
 		$this->view_data['breadcrumb'] = lang('application_smtp_settings');
 		$this->view_data['form_action'] = 'settings/smtp_settings/';
-		$this->view_data['settings'] = Setting::find(['id_vcompanies' => $id]);
-		return view('settings/smtp_settings', $this->view_data);
+		$this->view_data['settings'] = $this->settingTables
+			->where('id_vcompanies', $id)
+			->get()
+			->getResultArray();
+
+		// Load the view
+		return view('blueline/settings/smtp_settings', ["view_data" => $this->view_data]);
 	}
+
 
 	private function updateSmtpConfig($id)
 	{
@@ -785,7 +831,7 @@ class SettingsController extends BaseController
 			redirect('settings/compteBancaire');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = 'settings/ajoutCompteBancaire';
 			$this->content_view = 'settings/addCompteBancaire';
 		}
@@ -810,7 +856,7 @@ class SettingsController extends BaseController
 		} else {
 			$this->view_data['settings'] = setting::find(['id_vcompanies' => $_SESSION['current_company']]);
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_edit');
+			$this->view_data['title'] = lang('application.application_edit');
 
 			$this->db->where('id', $id);
 			$this->view_data['data'] = $this->db->get('comptes_bancaires')->row();
@@ -841,7 +887,7 @@ class SettingsController extends BaseController
 		} else {
 			$this->view_data['settings'] = setting::find(['id_vcompanies' => $_SESSION['current_company']]);
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = 'settings/ajoutTaxe';
 			$this->content_view = 'settings/referentiel/addreftaxe';
 		}
@@ -877,7 +923,7 @@ class SettingsController extends BaseController
 		} else {
 			$this->view_data['settings'] = setting::find(['id_vcompanies' => $_SESSION['current_company']]);
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_edit');
+			$this->view_data['title'] = lang('application.application_edit');
 			$this->view_data['form_action'] = 'settings/editTaxe/' . $id;
 
 			$this->db->where('id', $id);
@@ -888,7 +934,7 @@ class SettingsController extends BaseController
 
 	function Salarie()
 	{
-		$this->view_data['breadcrumb'] = $this->lang->line('application_rh_salarie');
+		$this->view_data['breadcrumb'] = lang('application.application_rh_salarie');
 		$this->view_data['breadcrumb_id'] = "Salarie";
 
 		$types = [12 => 'situation', 13 => 'genre', 18 => 'contrat', 19 => 'fonction'];
@@ -914,7 +960,7 @@ class SettingsController extends BaseController
 			redirect('settings/Salarie');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_edit');
+			$this->view_data['title'] = lang('application.application_edit');
 			$this->view_data['form_action'] = 'settings/editSalarie/' . $id;
 
 			$this->db->where('id', $id);
@@ -965,7 +1011,7 @@ class SettingsController extends BaseController
 			redirect('settings/Salarie');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = $form_action;
 			$this->content_view = 'settings/addref';
 		}
@@ -973,6 +1019,7 @@ class SettingsController extends BaseController
 	function editcompany()
 	{
 		$id = $_SESSION['current_company'];
+		$id = 2;
 		if ($_POST) {
 			if (is_uploaded_file($_FILES['userfile']['tmp_name'])) {
 				$this->uploadCompanyLogo();
@@ -999,13 +1046,13 @@ class SettingsController extends BaseController
 			$edit = $this->db->update('v_companies', $data);
 
 			if (!$edit) {
-				$this->session->set_flashdata('message', 'error:' . $this->lang->line('messages_update_company_error'));
+				$this->session->set_flashdata('message', 'error:' . lang('application.messages_update_company_error'));
 			} else {
-				$this->session->set_flashdata('message', 'success:' . $this->lang->line('messages_update_company_success'));
+				$this->session->set_flashdata('message', 'success:' . lang('application.messages_update_company_success'));
 			}
 			redirect('settings/editcompany/' . $id);
 		} else {
-			$this->loadCompanyEditView($id);
+			return $this->loadCompanyEditView($id);
 		}
 	}
 
@@ -1028,13 +1075,26 @@ class SettingsController extends BaseController
 
 	private function loadCompanyEditView($id)
 	{
-		$this->view_data['breadcrumb'] = $this->lang->line('application_edit_company');
-		$this->view_data['breadcrumb_id'] = "Societe";
+		$companyModel = new VCompanieModel();
 
-		$this->db->where('id', $id);
-		$this->view_data['company'] = $this->db->get('v_companies')->row();
-		$this->view_data['form_action'] = 'settings/editcompany';
-		$this->content_view = 'settings/_company';
+		// Load the company data from the database based on the ID
+		$company = $companyModel->find($id);
+
+
+		// Check if company data is found
+		if (!$company) {
+			throw new \CodeIgniter\Exceptions\PageNotFoundException("Company with ID $id not found.");
+		}
+
+		// Set up data for the view
+		$this->view_data['breadcrumb'] = lang('application.application_edit_company');
+		$this->view_data['breadcrumb_id'] = "Societe";
+		$this->view_data['company'] = $company;
+		$this->view_data['form_action'] = base_url('settings/editcompany');
+
+
+		// Load the view and pass the data
+		return view('blueline/settings/_company', ['view_data' => $this->view_data]);
 	}
 	function saveNotes()
 	{
@@ -1064,19 +1124,21 @@ class SettingsController extends BaseController
 
 	function compteBancaire()
 	{
-		$this->view_data['breadcrumb'] = $this->lang->line('application_compte_bancaire');
+		$this->view_data['breadcrumb'] = lang('application.application_compte_bancaire');
 		$this->view_data['breadcrumb_id'] = "Societe";
 
-		$company = $this->db->get('v_companies')->row();
-		$compteBancaire = $this->db->get('comptes_bancaires')->result();
+		$company = $this->db->table('v_companies')->get()->getResultArray();
+		$compteBancaire = $this->db->table('comptes_bancaires')->get()->getResultArray();
 
 		$option = ["id_vcompanies" => $_SESSION['current_company']];
-		$this->view_data['settings'] = Setting::find($option);
+		$settingsModel = new SettingModel();
+		$this->view_data['settings'] = $settingsModel->where($option)->first();
+		;
 		$this->view_data['compteBancaire'] = $compteBancaire;
 		$this->view_data['company'] = $company;
-		$this->view_data['form_action'] = 'settings/updateDefaultCompteBancaire';
+		$this->view_data['form_action'] = base_url('settings/updateDefaultCompteBancaire');
 
-		$this->content_view = 'settings/compteBancaire';
+		return view('blueline/settings/compteBancaire', ['view_data' => $this->view_data]);
 	}
 
 	function editPayment($id)
@@ -1102,7 +1164,7 @@ class SettingsController extends BaseController
 	private function loadPaymentEditView($id)
 	{
 		$this->theme_view = 'modal';
-		$this->view_data['title'] = $this->lang->line('application_edit');
+		$this->view_data['title'] = lang('application.application_edit');
 		$this->view_data['form_action'] = 'settings/editPayment/' . $id;
 
 		$this->db->where('id', $id);
@@ -1135,7 +1197,7 @@ class SettingsController extends BaseController
 	private function loadPaymentAddView()
 	{
 		$this->theme_view = 'modal';
-		$this->view_data['title'] = $this->lang->line('application-add');
+		$this->view_data['title'] = lang('application.application-add');
 		$this->view_data['form_action'] = 'settings/addPayment';
 
 		$this->content_view = 'settings/addref';
@@ -1213,19 +1275,103 @@ class SettingsController extends BaseController
 		redirect('settings/paiecnss');
 	}
 
-	function paiecnss()
+	public function paiecnss()
 	{
-		$table = "setting_document_rh";
-		$this->view_data['data'] = $this->db->get($table)->result();
-		$this->view_data['form_action'] = 'settings/settings_rh/';
+		// $this->db = \Config\Database::connect();
+		$session = session();
 
-		if ($_POST) {
-			$this->handlePostPaiecnss();
+		$config = new OccConfig();
+
+		// Fetch data for `setting_document_rh`
+		$this->view_data['data'] = $this->db->table('setting_document_rh')->get()->getResult();
+		$this->view_data['form_action'] = base_url('settings/settings_rh');
+		$this->view_data['form_action_1'] = base_url('settings/settings_rh');
+		$this->view_data['content_view'] = 'settings/paiecnss';
+
+		if ($this->request->getMethod() === 'post') {
+			if ($this->request->getPost('fonction007')) {
+				$postData = $this->request->getPost();
+				unset($postData['send'], $postData['fonction007'], $postData['zomba'], $postData['userfile'], $postData['file-name'], $postData['view'], $postData['idparam']);
+
+				$postData['id_vcompanie'] = (int) $session->get('current_company');
+				$postData['id_type'] = 19;
+
+				if (isset($postData['access'])) {
+					$postData['access'] = implode(',', $postData['access']);
+				} else {
+					unset($postData['access']);
+				}
+
+				$this->db->table('ref_type_occurences')->insert($postData);
+
+				$session->setFlashdata('message', 'success:' . lang('application.application_modified'));
+				return redirect()->to(base_url('settings/paiecnss'));
+			}
+
+			$id = $this->request->getPost('idparam');
+			$postData = $this->request->getPost();
+			unset($postData['send'], $postData['zomba'], $postData['userfile'], $postData['file-name'], $postData['view'], $postData['idparam']);
+			$postData['id_companie'] = (int) $session->get('current_company');
+
+			if (isset($postData['access'])) {
+				$postData['access'] = implode(',', $postData['access']);
+			} else {
+				unset($postData['access']);
+			}
+
+			$this->db->table('referentiels_rh_paies')->where('id', $id)->update($postData);
+
+			$session->setFlashdata('message', 'success:' . lang('application.application_modified'));
+			return redirect()->to(base_url('settings/paiecnss'));
 		} else {
-			$this->preparePaiecnssView();
-		}
+			// Fetch outils
+			$this->view_data['outils'] = $this->db->table('ref_type_occurences')
+				->where('id_type', 19)
+				->where('id_vcompanie', (int) $session->get('current_company'))
+				->get()
+				->getResultArray();
 
-		$this->content_view = 'settings/paiecnss';
+			// Fetch item
+			$item = $this->db->table('referentiels_rh_paies')
+				->where('id_companie', (int) $session->get('current_company'))
+				->get()
+				->getResultArray();
+
+			if (empty($item)) {
+				$this->db->table('referentiels_rh_paies')->insert(['id_companie' => (int) $session->get('current_company')]);
+				$item = $this->db->table('referentiels_rh_paies')
+					->where('id_companie', (int) $session->get('current_company'))
+					->get()
+					->getResultArray();
+			}
+
+			$this->view_data['item'] = $item;
+			$idparam = $item[0]->id ?? null;
+
+			// Motif d'absence
+			$this->view_data['refTab']['motif_absence'] = [
+				'tab' => $this->referentiels->getAllReferentielsByCodeType($config->type_id_motif_absence, true),
+				'libelle' => lang('application.application_motif_absence'),
+				'url_add_ref' => base_url('settings/ajoutMotifabsence'),
+				'url_update_ref' => base_url('settings/editMotifabsence'),
+				'url_delete_ref' => base_url('settings/desactiverMotifabsence'),
+				'masquer_statut' => true
+			];
+
+			// Statut de congés
+			$this->view_data['refTab']['statut_conges'] = [
+				'tab' => $this->referentiels->getAllReferentielsByCodeType($config->type_id_motif_absence, true),
+				'libelle' => lang('application.application_statut_conges'),
+				'url_add_ref' => base_url('settings/ajoutStatutConges'),
+				'url_update_ref' => base_url('settings/editStatutConges'),
+				'url_delete_ref' => base_url('settings/desactiverStatutConges'),
+				'masquer_statut' => true
+			];
+
+			$this->view_data['idparam'] = $idparam;
+
+			return view('settings/paiecnss', ['view_data' => $this->view_data]);
+		}
 	}
 
 	private function handlePostPaiecnss()
@@ -1243,7 +1389,7 @@ class SettingsController extends BaseController
 		$_POST['id_vcompanie'] = (int) $_SESSION['current_company'];
 		$_POST['id_type'] = 19;
 		$this->db->insert('ref_type_occurences', $_POST);
-		$this->session->set_flashdata('message', 'success:' . $this->lang->line('application_modified'));
+		$this->session->set_flashdata('message', 'success:' . lang('application.application_modified'));
 		redirect('settings/paiecnss');
 	}
 
@@ -1253,7 +1399,7 @@ class SettingsController extends BaseController
 		$this->cleanPostData();
 		$_POST['id_companie'] = (int) $_SESSION['current_company'];
 		$this->db->where('id', $id)->update('referentiels_rh_paies', $_POST);
-		$this->session->set_flashdata('message', 'success:' . $this->lang->line('application_modified'));
+		$this->session->set_flashdata('message', 'success:' . lang('application.application_modified'));
 		redirect('settings/paiecnss');
 	}
 
@@ -1267,21 +1413,7 @@ class SettingsController extends BaseController
 		}
 	}
 
-	private function preparePaiecnssView()
-	{
-		$this->view_data['outils'] = $this->db->where('id_type', 19)->where('id_vcompanie', (int) $_SESSION['current_company'])->get('ref_type_occurences')->result();
-		$item = $this->db->where('id_companie', (int) $_SESSION['current_company'])->get('referentiels_rh_paies')->result();
 
-		if (empty($item)) {
-			$this->db->insert('referentiels_rh_paies', ['id_companie' => (int) $_SESSION['current_company']]);
-		}
-		$this->view_data['item'] = $item;
-
-		// Populate absence motifs
-		$this->view_data['refTab']['motif_absence'] = $this->getReferentielData("type_code_motif_absence", 'application_motif_absence');
-		// Populate leave statuses
-		$this->view_data['refTab']['statut_conges'] = $this->getReferentielData("type_code_statut_conges", 'application_statut_conges');
-	}
 
 	private function getReferentielData($typeCode, $label)
 	{
@@ -1301,7 +1433,7 @@ class SettingsController extends BaseController
 			// Logic to handle form submission would go here
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_neauveau_fonction');
+			$this->view_data['title'] = lang('application.application_neauveau_fonction');
 			$this->view_data['form_action'] = 'settings/paiecnss/';
 			$this->content_view = 'rhpaie/addfonction';
 		}
@@ -1358,7 +1490,7 @@ class SettingsController extends BaseController
 			redirect('settings/vente');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = 'settings/AjoutAvoir';
 			$this->content_view = 'settings/addref';
 		}
@@ -1398,24 +1530,19 @@ class SettingsController extends BaseController
 	//liste des utilisateurs 
 	function listUser($statut = 1)
 	{
-		$this->view_data['breadcrumb'] = $this->lang->line('application_users_access');
+		$this->view_data['breadcrumb'] = lang('application.application_users_access');
 		$this->view_data['breadcrumb_id'] = "users";
 
 		if (!in_array($statut, [0, 1])) {
 			redirect("settings/listUser");
 		}
 
-		$options = [
-			'conditions' => [
-				'status ' . ($statut == 0 ? '=' : '!=') . ' ?',
-				'deleted'
-			]
-		];
-
-		$users = User::all($options);
+		$users = $this->account->getUsersByStatus($statut);
+		//var_dump($users);die;
 		$this->view_data['users'] = $users;
 		$this->view_data['statut'] = $statut;
-		$this->content_view = 'settings/listuser';
+
+		return view('blueline/settings/listuser', ['view_data' => $this->view_data]);
 	}
 
 	function user_access_update($id = null)
@@ -1474,12 +1601,12 @@ class SettingsController extends BaseController
 			$access->update_attributes($_POST);
 			$user->update_attributes(array_map('htmlspecialchars', $dscreen));
 
-			$this->session->set_flashdata('message', 'success:' . $this->lang->line('messages_save_user_access'));
+			$this->session->set_flashdata('message', 'success:' . lang('application.messages_save_user_access'));
 			redirect('settings/listUser');
 		} else {
 			$this->view_data['user'] = $user;
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_create_user');
+			$this->view_data['title'] = lang('application.application_create_user');
 			// All modules
 			$this->view_data['modules'] = Module::find('all', ['order' => 'sort ASC', 'conditions' => ['type != ?', 'client']]);
 			// All submenus
@@ -1501,18 +1628,20 @@ class SettingsController extends BaseController
 		$this->view_data['breadcrumb'] = "Choix template";
 
 		// Get the number of templates 
-		$dir = "application/views/blueline/templates/invoice";
-		$files = array_filter(scandir($dir), function ($file) {
+		$dir = APPPATH . "views/blueline/templates/invoice";
+
+		$files = array_filter(scandir($dir), function ($file) use ($dir) {
 			return $file !== 'nuts.php' && !is_dir($dir . '/' . $file);
 		});
 
-		$option = ["id_vcompanies" => $_SESSION['current_company']];
-		$this->view_data['defaultTemplate'] = Setting::find($option)->default_template;
+		$option = ["id_vcompanies" => 2];
+		$this->view_data['defaultTemplate'] = $this->settingTables->find($option)->default_template;
 		$this->view_data['files'] = array_map(function ($file) {
 			return pathinfo($file, PATHINFO_FILENAME);
 		}, $files);
 
-		$this->content_view = 'settings/choiceTemplate';
+		//$this->content_view = 'settings/choiceTemplate';
+		return view('blueline/settings/choiceTemplate', ['view_data' => $this->view_data]);
 	}
 
 	function preview($file, $attachment = FALSE)
@@ -1570,45 +1699,67 @@ class SettingsController extends BaseController
 		$this->view_data['breadcrumb_id'] = $breadcrumb;
 
 		$this->view_data['submenu'] = array(
-			$this->lang->line('application_ref') => 'projects-params',
-			$this->lang->line('application_tache_categorie') => 'projects-params/taches-par-defaut',
+			lang('application.application_ref') => 'projects-params',
+			lang('application.application_tache_categorie') => 'projects-params/taches-par-defaut',
 		);
 	}
 
 	// Manage commercial settings
-	function gestionCommercial()
+	public function gestionCommercial()
 	{
-		$this->view_data['breadcrumb'] = $this->lang->line('application_gestioncommercial');
+
+		$this->view_data['breadcrumb'] = lang('application.application_gestioncommercial');
 		$this->view_data['breadcrumb_id'] = "achat";
 
-		// Fetching visible occurrences and item units
-		$this->view_data['echeance'] = $this->db->get_where('ref_type_occurences', ['visible' => 1, 'id_type' => 20])->result();
-		$this->view_data['item_units'] = $this->db->get('item_units')->result();
 
-		// Other settings
-		$settings = setting::find(['id_vcompanies' => $_SESSION['current_company']]);
-		$this->view_data['timbre'] = $settings->timbre_fiscal;
+		$this->db = \Config\Database::connect();
+
+		$this->view_data['form_action'] = 'settings/addUnit';
+		$this->view_data['echeance'] = $this->db->table('ref_type_occurences')
+			->where(['visible' => 1, 'id_type' => 20])
+			->get()
+			->getResultArray();
+
+		$this->view_data['item_units'] = $this->db->table('item_units')
+			->get()
+			->getResultArray();
+
+
+		$settingsModel = new \App\Models\SettingModel();
+		$settings = $settingsModel->where('id_vcompanies', $_SESSION['current_company'])
+			->first();
+
+		$this->view_data['timbre'] = $settings->timbre_fiscal ?? null;
 		$this->view_data['settings'] = $settings;
-		$this->view_data['paiement'] = $this->db->get_where('ref_type_occurences', ['visible' => 1, 'id_type' => 8])->result();
-		$this->view_data['compteBancaire'] = $this->db->get('comptes_bancaires')->result();
 
-		$this->content_view = 'settings/gestioncommercial';
+		$this->view_data['paiement'] = $this->db->table('ref_type_occurences')
+			->where(['visible' => 1, 'id_type' => 8])
+			->get()
+			->getResultArray();
+
+		$this->view_data['compteBancaire'] = $this->db->table('comptes_bancaires')
+			->get()
+			->getResultArray();
+
+		// Render the view
+		return view('blueline/settings/gestioncommercial', ['view_data' => $this->view_data]);
 	}
 
 	// Display sales references
 	public function refvente()
 	{
-		$this->view_data['breadcrumb'] = $this->lang->line('application_ref_vente');
+		$this->view_data['breadcrumb'] = lang('application.application_ref_vente');
 		$this->view_data['breadcrumb_id'] = "refvente";
+		$config = new OccConfig();
 
 		// Payment methods
-		$this->setReferential('MoyensPaiement', $this->config->item("type_id_moyens_paiement"), 'settings/ajoutReferentiel');
+		$this->setReferential('MoyensPaiement', $config->type_id_moyens_paiement, 'settings/ajoutReferentiel');
 
 		// Tax
-		$this->view_data['taxe'] = $this->referentiels->getReferentielsByIdType($this->config->item("type_id_tva"));
+		$this->view_data['taxe'] = $this->referentiels->getReferentielsByIdType($config->type_id_tva);
 		$this->view_data['refTab']['TVA']['libelle'] = "Taux TVA";
 
-		$this->content_view = 'settings/referentiel/vente';
+		return view('blueline/settings/referentiel/vente', ['view_data' => $this->view_data]);
 	}
 
 	// Set up a referential tab
@@ -1625,13 +1776,12 @@ class SettingsController extends BaseController
 	public function indexParamsProjets()
 	{
 		$this->projectReferentielSubMenu("projects-params");
-		$this->view_data['refTab']['uniteTemps'] = [
-			'tab' => $this->referentiels->getReferentielsByIdType($this->config->item("type_id_unite_temps"), false),
-			'libelle' => $this->lang->line('application_unite_affichage_temps_taches'),
-			'form_action' => 'settings/choisirUniteTemps'
-		];
+		$this->view_data['refTab']['uniteTemps'] = [];
+		$this->view_data['tab'] = $this->referentiels->getReferentielsByIdType(config("type_id_unite_temps"), false);
+		$this->view_data['libelle'] = lang('application.application_unite_affichage_temps_taches');
+		$this->view_data['form_action'] = 'settings/choisirUniteTemps';
 
-		$this->content_view = 'settings/referentielProjets';
+		return view('blueline/settings/referentielProjets', ['view_data' => $this->view_data]);
 	}
 
 	// Add a new referential
@@ -1649,7 +1799,7 @@ class SettingsController extends BaseController
 			redirect($redirect);
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = "settings/ajoutReferentiel/{$id_type}/{$redirect}";
 			$this->content_view = 'settings/addref';
 		}
@@ -1668,7 +1818,7 @@ class SettingsController extends BaseController
 			redirect($redirect);
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_edit');
+			$this->view_data['title'] = lang('application.application_edit');
 			$this->view_data['form_action'] = "settings/editReferentiel/{$redirect}/{$id}";
 			$this->view_data['data'] = $this->referentiels->getReferentielsById($id);
 			$this->content_view = 'settings/addref';
@@ -1720,7 +1870,7 @@ class SettingsController extends BaseController
 			redirect('projects-params/taches-par-defaut/view/' . $categ_id);
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = 'settings/addTicketsParDefaut/' . $categ_id;
 			$this->content_view = 'settings/addref';
 		}
@@ -1746,7 +1896,7 @@ class SettingsController extends BaseController
 			redirect('projects-params/taches-par-defaut/view/' . $categ_id);
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_edit');
+			$this->view_data['title'] = lang('application.application_edit');
 			$this->view_data['form_action'] = 'settings/editTicketsParDefaut/' . $categ_id . '/' . $id;
 			$this->view_data['data'] = $this->settingTables->getDataById($id, Categorie_tickets::table_name());
 			$this->content_view = 'settings/addref';
@@ -1807,7 +1957,7 @@ class SettingsController extends BaseController
 			redirect('projects-params');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = 'settings/ajoutEtatProjet';
 			$this->content_view = 'settings/addref';
 		}
@@ -1830,7 +1980,7 @@ class SettingsController extends BaseController
 			redirect('projects-params');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_edit');
+			$this->view_data['title'] = lang('application.application_edit');
 			$this->view_data['form_action'] = 'settings/editEtatProjet/' . $id;
 			$this->view_data['data'] = $this->referentiels->getReferentielsById($id);
 			$this->content_view = 'settings/addref';
@@ -1861,7 +2011,7 @@ class SettingsController extends BaseController
 			redirect('settings/paiecnss');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = 'settings/ajoutMotifAbsence';
 			$this->content_view = 'settings/addref';
 		}
@@ -1887,7 +2037,7 @@ class SettingsController extends BaseController
 			redirect('settings/paiecnss');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_edit');
+			$this->view_data['title'] = lang('application.application_edit');
 			$this->view_data['form_action'] = 'settings/editMotifAbsence/' . $id;
 			$this->view_data['data'] = $this->referentiels->getReferentielsById($id);
 			$this->content_view = 'settings/addref';
@@ -1918,7 +2068,7 @@ class SettingsController extends BaseController
 			redirect('settings/paiecnss');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application-add');
+			$this->view_data['title'] = lang('application.application-add');
 			$this->view_data['form_action'] = 'settings/ajoutStatutConges';
 			$this->content_view = 'settings/addref';
 		}
@@ -1940,7 +2090,7 @@ class SettingsController extends BaseController
 			redirect('settings/paiecnss');
 		} else {
 			$this->theme_view = 'modal';
-			$this->view_data['title'] = $this->lang->line('application_edit');
+			$this->view_data['title'] = lang('application.application_edit');
 			$this->view_data['form_action'] = 'settings/editStatutConges/' . $id;
 			$this->view_data['data'] = $this->referentiels->getReferentielsById($id);
 			$this->content_view = 'settings/addref';
@@ -1952,15 +2102,16 @@ class SettingsController extends BaseController
 	 *******************************************************************/
 	function notification()
 	{
-		$this->load->database();
-		$this->db->select('email_notification');
-		$this->db->from('core');
-		$this->db->where('id', 2);
+		//var_dump($this->view_data);
+		//die;
 
-		$result = $this->db->get()->row();
+		$this->view_data['breadcrumb'] = lang('application.application_settings');
+		$this->view_data['breadcrumb_id'] = "settings";
+
+		$result = $this->settingTables->select('email_notification')->find(2);
 		$this->view_data['form_action'] = 'settings/editemail/';
 		$this->view_data['data'] = $result;
-		$this->content_view = 'settings/notification';
+		return view('blueline/settings/notification', ['view_data' => $this->view_data]);
 	}
 
 	/*******************************************************************
@@ -1979,13 +2130,11 @@ class SettingsController extends BaseController
 		$success = $this->db->update('core', $data);
 
 		if (!$success) {
-			$this->session->set_flashdata('message', 'error:' . $this->lang->line('messages_erreur_email_success'));
+			$this->session->set_flashdata('message', 'error:' . lang('application.messages_erreur_email_success'));
 		} else {
-			$this->session->set_flashdata('message', 'success:' . $this->lang->line('messages_save_email_success'));
+			$this->session->set_flashdata('message', 'success:' . lang('application.messages_save_email_success'));
 		}
 
 		redirect('settings/notification');
 	}
-
 }
-

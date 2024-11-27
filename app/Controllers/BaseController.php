@@ -2,25 +2,28 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\Controller;
-use CodeIgniter\HTTP\CLIRequest;
-use CodeIgniter\HTTP\IncomingRequest;
-use CodeIgniter\HTTP\RequestInterface;
-use CodeIgniter\HTTP\ResponseInterface;
-
 use App\Models\CoreModel;
-
-use App\Models\VCompanieModel;
 use App\Models\UserModel;
 use App\Models\ClientModel;
 use App\Models\ModuleModel;
-use App\Models\AccesRigthModel;
-use App\Models\PrivatemessageModel;
-use App\Models\ModulesSousModel;
-use App\Models\ProjectModel;
 use App\Models\TicketModel;
 
+use CodeIgniter\Controller;
+use App\Models\InvoiceModel;
+
+use App\Models\ProjectModel;
 use Psr\Log\LoggerInterface;
+use App\Models\VCompanieModel;
+use App\Models\AccesRigthModel;
+use App\Models\ModulesSousModel;
+use CodeIgniter\HTTP\CLIRequest;
+use App\Models\SubscriptionModel;
+use App\Models\PrivatemessageModel;
+use App\Models\ProjectHasTaskModel;
+use CodeIgniter\HTTP\IncomingRequest;
+use CodeIgniter\HTTP\RequestInterface;
+
+use CodeIgniter\HTTP\ResponseInterface;
 
 /**
  * Class BaseController
@@ -52,9 +55,9 @@ abstract class BaseController extends Controller
      */
     protected $helpers = [];
 
-    protected $coreSettingModel, $userModel, $clientModel, $VCompanieModel, $ticketModel;
+    protected $coreSettingModel, $userModel, $clientModel, $VCompanieModel, $ticketModel, $subscriptionModel;
 
-    protected $accessRigth, $module, $privatemessage, $modulesSousModel, $projectModel;
+    protected $accessRigth, $module, $privatemessage, $modulesSousModel, $projectModel, $projectHasTaskModel, $invoiceModel;
     protected array $view_data = [];
 
     private function processPostData(): void
@@ -114,13 +117,17 @@ abstract class BaseController extends Controller
         $this->client = session()->get('client_id') ? $this->clientModel->find(session()->get('client_id'))->getResultArray() : False;
 
         if ($this->user) {
+            $this->userModel->updateLastActive($user_id);
             $userIsSuperAdmin = ($this->user['admin'] == '1') ? true : false;
             $this->setupUserAccess($userIsSuperAdmin);
         } else {
-        // var_dump(session()->get('client_id'));
-      //   die();
+
+            $clientData = $this->clientModel->find($this->client);
+            $this->clientModel->updateLastActive($clientData[0]['id']);
+
             $access = explode(",", $this->client);
-            $this->view_data['menu'] = $this->module->whereIn('id', $access)->where('type', 'client')->orderBy('sort', 'asc')->get()->getResultArray();;
+            $this->view_data['menu'] = $this->module->whereIn('id', $access)->where('type', 'client')->orderBy('sort', 'asc')->get()->getResultArray();
+            ;
         }
     }
 
@@ -139,20 +146,20 @@ abstract class BaseController extends Controller
     {
         $submenu = '';
         $comp_array = false;
+        $this->view_data['comp_array'] =$comp_array;
         if (isset($_SESSION['current_company'])) {
             //$sub = $this->submenu->findAll();
             $menu = $this->module->whereIn('id', $access)->where('type', 'main')->orderBy('sort', 'asc')->get()->getResultArray();
-            ;
             $submenu = $this->modulesSousModel->getSubmenu($accessSubmenu);
             $this->view_data['menu'] = $menu;
             $this->view_data['submenuRight'] = $submenu;
-
         } else {
             $this->view_data['menu'] = $this->module->where('type', 'main')->orderBy('sort', 'asc')->get()->getResultArray();
         }
         if (!$userIsSuperAdmin) {
             $comp_array = array();
             $comp_array = $this->accessRigth->find(array('conditions' => array('user_id=?', $this->view_data['user_id'])))->company_id;
+            $this->view_data['comp_array'] =$comp_array;
         }
         $this->view_data['module_permissions'] = array();
         $notification_list = array();
@@ -185,14 +192,48 @@ abstract class BaseController extends Controller
 
         //var_dump($this->view_data['widgets']);
         //die();
-    }
-
-    private function updateLastActive(): void
-    {
-        if ($this->user) {
-            $this->user->last_active = time();
-            $this->user->save();
+        if (in_array("invoices", $this->view_data['module_permissions'])) {
+            $overdueInvoices = $this->invoiceModel->overdueByDate($this->view_data['user_id'], $comp_array, $this->view_data['date']);
+            foreach ($overdueInvoices as $key => $value) {
+                $line = str_replace("{invoice_number}", '<a href="' . base_url() . 'invoices/view/' . $value->id . '">#' . $this->view_data['core_settings']->invoice_prefix . $value->reference . '</a>', lang('event.event_invoice_overdue'));
+                $notification_list[$value->due_date . "." . $value->id] = $line;
+            }
         }
+
+        if (in_array("subscriptions", $this->view_data['module_permissions'])) {
+            $outstandingInvoices = $this->subscriptionModel->newInvoiceOutstanding($comp_array, $this->view_data['date']);
+            foreach ($outstandingInvoices as $key2 => $value2) {
+                $eventline = str_replace("{subscription_number}", '<a href="' . base_url() . 'subscriptions/view/' . $value2->id . '">#' . $this->view_data['core_settings']->subscription_prefix . $value2->reference . '</a>', lang('event.event_subscription_new_invoice'));
+                $notification_list[$value2->next_payment . "." . $value2->id] = $eventline;
+            }
+
+        }
+
+        if (in_array("projects", $this->view_data['module_permissions'])) {
+            $overdueProjects = $this->projectModel->overdueByDate($comp_array, $this->view_data['date']);
+            //task notification
+            $this->view_data['projects_icon'] = true;
+            $this->view_data['task_notifications'] = $this->projectHasTaskModel->find('all', array('conditions' => array('user_id = ? AND tracking != ?', $this->view_data['user_id'], 0)));
+            foreach ($overdueProjects as $key2 => $value2) {
+                if ($this->user->admin == 0) {
+                    $sql = "SELECT id FROM `project_has_workers` WHERE project_id = " . $value->id . " AND intervenant_id  = " . $this->view_data['user_id'];
+                    $res = $this->projectModel->find_by_sql($sql);
+                    //$res = $query;
+                    if ($res) {
+                        $eventline = str_replace("{project_number}", '<a href="' . base_url() . 'projects/view/' . $value2->id . '">#' . $value2->project_num . '</a>', lang('event.event_project_overdue'));
+                        $notification_list[$value2->end . "." . $value2->id] = $eventline;
+                    }
+                } else {
+                    $eventline = str_replace("{project_number}", '<a href="' . base_url() . 'projects/view/' . $value2->id . '">#' . $value2->project_num . '</a>', lang('event.event_project_overdue'));
+                    $notification_list[$value2->end . "." . $value2->id] = $eventline;
+                }
+            }
+        }
+
+
+        krsort($notification_list);
+        $this->view_data["notification_list"] = $notification_list;
+        $this->view_data["notification_count"] = count($notification_list);
     }
 
     private function loadAdditionalData(): void
@@ -234,6 +275,9 @@ abstract class BaseController extends Controller
         $this->modulesSousModel = new ModulesSousModel();
         $this->projectModel = new ProjectModel();
         $this->ticketModel = new TicketModel();
+        $this->invoiceModel = new InvoiceModel();
+        $this->subscriptionModel = new SubscriptionModel();
+        $this->projectHasTaskModel = new ProjectHasTaskModel();
 
 
         $this->processPostData();
@@ -243,6 +287,22 @@ abstract class BaseController extends Controller
         $this->view_data['lastsec'] = $request->getUri()->getTotalSegments();
         $this->view_data['act_uri_submenu'] = $request->getUri()->getSegment($request->getUri()->getTotalSegments());
         $this->view_data['datetime'] = date('Y-m-d H:i');
+        $this->view_data['date'] = date('Y-m-d', time());
+        $uri = service('uri');
+
+        $lastSegment = $uri->getTotalSegments(); // Get the total number of segments
+        $lastSegmentValue = $uri->getSegment($lastSegment);
+        if (is_numeric($this->view_data['act_uri_submenu'])) {
+
+            // Check if the last segment is numeric
+
+            $previousSegmentIndex = $lastSegment - 1;
+            $this->view_data['act_uri_submenu'] = $uri->getSegment($previousSegmentIndex);
+
+
+        } else {
+            $this->view_data['act_uri_submenu'] = $lastSegmentValue;
+        }
         $this->view_data['nom_licence'] = $this->VCompanieModel->getCompany();
 
         // Setup language and fetch installed languages
@@ -252,11 +312,8 @@ abstract class BaseController extends Controller
         // Setup user and client data
         $this->setupUserAndClientData();
 
-        // Update user last active
-        if ($this->user || $this->client) {
-            // $this->updateLastActive();
-            $this->view_data["note_templates"] = "";
-        }
+
+        $this->view_data["note_templates"] = "";
 
         // Load additional data
         $this->loadAdditionalData();
@@ -277,13 +334,13 @@ abstract class BaseController extends Controller
                 $this->view_data['dateformat'] = "F j, Y";
                 $this->view_data['time24hours'] = "false";
                 break;
-
         }
-        
+
         $language->setLocale($session->lang);
         $this->db = \Config\Database::connect();
-        
-      //  $this->view_data['userimage'] = get_UserPic($this->user['userpic'], $this->user['email']);
+        //var_dump($this->view_data['accessSubmenu']);
+        //die;
+        //  $this->view_data['userimage'] = get_UserPic($this->user['userpic'], $this->user['email']);
 
     }
 }

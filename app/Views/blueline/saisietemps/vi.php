@@ -1,3 +1,5 @@
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('content') ?>
 <?php $user =$this->user->id ;
 				
 				if ($user==1) {	
@@ -20,3 +22,4 @@
    
 
 	<?php }}?>
+	<?= $this->endSection() ?>

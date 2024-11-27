@@ -1,7 +1,9 @@
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('content') ?>
 <?php
-$year = $data['year'];
-$month = $data['month'];
-$department = $data['department'];
+$year = $view_data['data']['year'];
+$month = $view_data['data']['month'];
+$department = $view_data['data']['department'];
 $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 ?>
 
@@ -12,9 +14,9 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
 				
 			
-    <div class="row">
+    <div class="">
         <a href="<?= base_url() ?>projects" class="btn btn-primary right">Liste des projets </a>
-			<?php  $idadmin =$this->user->salaries_id ;
+			<?php  $idadmin =session()->get('user')['salaries_id'] ;
 				
 				if ($idadmin==NULL) {
 
@@ -26,9 +28,9 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
                 <label for="service_filter">Service</label>
                 <select class="chosen-select" id="service_filter">
                     <option value="all">Tous les services</option>
-                    <option value="mms" <?= $data['department'] == 'mms' ? 'selected' : '' ?>>MMS</option>
-                    <option value="2d" <?= $data['department'] == '2d' ? 'selected' : '' ?>>BIM 2D</option>
-                    <option value="3d" <?= $data['department'] == '3d' ? 'selected' : '' ?>>BIM 3D</option>
+                    <option value="mms" <?= $view_data['data']['department'] == 'mms' ? 'selected' : '' ?>>MMS</option>
+                    <option value="2d" <?= $view_data['data']['department'] == '2d' ? 'selected' : '' ?>>BIM 2D</option>
+                    <option value="3d" <?= $view_data['data']['department'] == '3d' ? 'selected' : '' ?>>BIM 3D</option>
                 </select>
             </div>
         </div>
@@ -43,7 +45,7 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
             <!-- salariés -->
             <div class="form-group">
                	<?php	$i=1;
-  foreach($dataa as $row)
+  foreach($view_data['dataa'] as $row)
   { $i++;?>
 				
               
@@ -52,7 +54,7 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 						
  <h4 style='align-items-center'><?php
 
- echo $row->seraffectation; ?></h4> </label>	</span>
+ echo $row['seraffectation']; ?></h4> </label>	</span>
 							
 					<?php }?>
             </div>
@@ -65,9 +67,9 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
                 <label for="service_filter">Service</label>
                 <select class="chosen-select" id="service_filter">
                     
-                    <option value="mms" <?= $data['department'] == 'mms' ? 'selected' : '' ?>>MMS</option>
-                    <option value="2d" <?= $data['department'] == '2d' ? 'selected' : '' ?>>BIM 2D</option>
-                    <option value="3d" <?= $data['department'] == '3d' ? 'selected' : '' ?>>BIM 3D</option>
+                    <option value="mms" <?= $view_data['data']['department'] == 'mms' ? 'selected' : '' ?>>MMS</option>
+                    <option value="2d" <?= $view_data['data']['department'] == '2d' ? 'selected' : '' ?>>BIM 2D</option>
+                    <option value="3d" <?= $view_data['data']['department'] == '3d' ? 'selected' : '' ?>>BIM 3D</option>
                 </select>
             </div>
         </div>
@@ -80,19 +82,19 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 	
 	
     <div class="row">
-        <div class="table-head"><?= $this->lang->line('application_calendar'); ?></div>
+        <div class="table-head"><?= lang('application.application_calendar'); ?></div>
         <div class="table-div">
             <!--HEADER BUTTON -->
             <div class="header-button">
-                <a href="<?php echo site_url('suivi?year=' . $data['prev_year'] . '&month=' . $data['prev_month'] . '&department=' . $department); ?>" class="btn btn-light btn-sm">
+                <a href="<?php echo site_url('suivi?year=' . $view_data['data']['prev_year'] . '&month=' . $view_data['data']['prev_month'] . '&department=' . $department); ?>" class="btn btn-light btn-sm">
                     Previous month
                 </a>
 
-                <a href="<?php echo site_url('suivi?year=' . $data['next_year'] . '&month=' . $data['next_month'] . '&department=' . $department); ?>" class="btn btn-light btn-sm">
+                <a href="<?php echo site_url('suivi?year=' . $view_data['data']['next_year'] . '&month=' . $view_data['data']['next_month'] . '&department=' . $department); ?>" class="btn btn-light btn-sm">
                     Next month
                 </a>
 
-                <button type="button" class="btn btn-light btn-sm last-in-row" onclick="select();" data-toggle="popover"><img src="<?php echo base_url('./assets/suivi/img/icon1.png'); ?>" class="icon small"></img><span>Select...</span> </button>
+                <button type="button" class="btn btn-light btn-sm last-in-row" onclick="select();" data-bs-toggle="popover"><img src="<?php echo base_url('./assets/suivi/img/icon1.png'); ?>" class="icon small"></img><span>Select...</span> </button>
             </div>
 
             <div class="calendars">
@@ -116,14 +118,14 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
                     </div>
 
                     <div class="user">
-                        <?php foreach ($data['users'] as $user) : ?>
-                            <div class="item" data-id="<?php echo ($user->id); ?>">
+                        <?php foreach ($view_data['data']['users'] as $user) : ?>
+                            <div class="item" data-id="<?php echo ($user['id']); ?>">
                                 <div class="name-column">
                                     <div class="name-wrap">
-                                        <span class="name itemname" data-toggle="popover" data-placement="right" data-trigger="focus" data-html="true" data-title="<?php echo ($user->nom . ' ' . $user->prenom) ?>" data-ville="<?php echo ($user->ville) ?>" data-affectation="<?php echo ($user->seraffectation) ?>" data-file="<?php echo ($user->file); ?>" data-phone="<?php echo ($user->tel1) ?>">
-                                            <?php echo get_salaries_icon($user->genre) ?>
+                                        <span class="name itemname" data-bs-toggle="popover" data-placement="right" data-trigger="focus" data-html="true" data-title="<?php echo ($user['nom'] . ' ' . $user['prenom']) ?>" data-ville="<?php echo ($user['ville']) ?>" data-affectation="<?php echo ($user['seraffectation']) ?>" data-file="<?php echo ($user['file']); ?>" data-phone="<?php echo ($user['tel1']) ?>">
+                                            <?php echo get_salaries_icon($user['genre']) ?>
                                             <span class="user--name" data-value="">
-                                                <?php echo ($user->nom . ' ' . $user->prenom) ?>
+                                                <?php echo ($user['nom'] . ' ' . $user['prenom']) ?>
                                             </span>
                                         </span>
                                     </div>
@@ -138,8 +140,8 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
                                         <div class="day week-num-<?= date('N', strtotime($year . sprintf('%02d', $month) . sprintf('%02d', $i))) ?> <?php echo ($today ? 'today' : ''); ?>">
                                             <?php if ($dateNumber != 7) : ?>
-                                                <div class="num iconnume" data-value="<?= suiviTooltipContent($data['projets'], $data['sujets'], $user->id, $date) ?>">
-                                                    <?= iconeDeSuivi($data['events'], $user->id, $date); ?>
+                                                <div class="num iconnume" data-value="<?// $view_data['data']['projets'], $view_data['data']['sujets'], $user['id'], $date ?>">
+                                                    <?= iconeDeSuivi($view_data['data']['events'], $user['id'], $date); ?>
                                                 </div>
                                             <?php endif; ?>
 
@@ -260,20 +262,22 @@ $daysCount = cal_days_in_month(CAL_GREGORIAN, $month, $year);
                 }
             </script>
 
-            <div id="monthSelector" data-month="<?php echo $data['month'] ?>">
+            <div id="monthSelector" data-month="<?php echo $view_data['data']['month'] ?>">
                 <div class="controls d-flex justify-content-center align-items-center">
                     <button type="button" class="btn btn-light btn-sm" onclick="decrement();" data-prev>&laquo;</button>
                     <div class="year text-center mx-4" id="#mx-4">
-                        <p id="id"><?php echo $data['year'] ?></p>
+                        <p id="id"><?php echo $view_data['data']['year'] ?></p>
                     </div>
                     <button type="button" class="btn btn-light btn-sm" onclick="increment();" data-next>&raquo;</button>
                 </div>
                 <div class="months mt-2">
                     <?php for ($i = 1; $i <= 12; $i++) : ?>
-                        <a class="dropdown-item px-2 <?php echo (($i == $data['month']) ? 'active' : ''); ?>" href="<?php echo site_url('suivi?year=' . $data['year'] . '&month=' . $i . '&department=' . $department); ?>" data-id="<?php echo ($i); ?>" data-num="<?php echo $i; ?>"><?php echo get_month_name($i); ?></a>
+                        <a class="dropdown-item px-2 <?php echo (($i == $view_data['data']['month']) ? 'active' : ''); ?>" href="<?php echo site_url('suivi?year=' . $view_data['data']['year'] . '&month=' . $i . '&department=' . $department); ?>" data-id="<?php echo ($i); ?>" data-num="<?php echo $i; ?>"><?php echo get_month_name($i); ?></a>
                     <?php endfor; ?>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<?= $this->endSection() ?>

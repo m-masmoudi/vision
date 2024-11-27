@@ -28,7 +28,7 @@
 						<i class="fa fa-edit" title="Modifier"></i>
 					</a>
 
-					<button type="button" class="btn-option delete po" data-toggle="popover" data-placement="left" data-content="
+					<button type="button" class="btn-option delete po" data-bs-toggle="popover" data-placement="left" data-content="
 							 <a class='btn btn-danger po-delete ajax-silent' href='<?=base_url().(isset($url_delete_ref)? $url_delete_ref.'/'.$key->id:'#') ?>'>
 							 	<?=$this->lang->line('application_yes_im_sure');?>
 							 </a> 

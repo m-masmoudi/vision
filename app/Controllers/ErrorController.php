@@ -35,7 +35,7 @@ class ErrorController extends Controller
 		$currentURL = current_url();
 		$requestURI = service('request')->getUri();
 		$message = "Oops! The page at '" . $requestURI . "' could not be found.";
-
+		
 		if (is_cli()) {
 			return view('errors/cli/error_404', ['message' => $message]);
 		}

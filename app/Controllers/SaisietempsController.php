@@ -2,9 +2,9 @@
 
 namespace App\Controllers;
 
-use App\Models\RefTypeModel;
-use App\Models\RefTypeOccurencesModel; // Fix the typo in the model name
 use App\Models\UserModel;
+use App\Models\RefTypeModel; // Fix the typo in the model name
+use App\Models\RefTypeOccurencesModel;
 
 class SaisietempsController extends BaseController
 {
@@ -14,8 +14,8 @@ class SaisietempsController extends BaseController
     private array $joursTravailMois = [];
     private RefTypeModel $refType;
     private RefTypeOccurencesModel $referentiels; // Ensure this is correctly spelled
-    private UserModel $userModel;
-    protected array $view_data = [];
+    private UserModel $userModel2;
+  
 
     // Add properties for type_ticket_projet and type_ticket_defaut
     protected $type_ticket_projet;
@@ -26,7 +26,7 @@ class SaisietempsController extends BaseController
         // Load models using dependency injection
         $this->refType = new RefTypeModel();
         $this->referentiels = new RefTypeOccurencesModel();
-        $this->userModel = new UserModel();
+        $this->userModel2 = new UserModel();
 
         // Check user access
         if (!session()->get('client')) {
@@ -62,13 +62,15 @@ class SaisietempsController extends BaseController
 
     private function getData(bool $isSaisie, string $mois = null, string $annee = null)
     {
-        $idadmin = session()->get('user')->salaries_id;
+        
+        $user=session()->get('user');
+        $idadmin = $user['salaries_id'];
 
         if ($idadmin === null) {
-            return view('saisietemps/vi2', $this->view_data);
+            return view('blueline/saisietemps/vi2', ['view_data'=>$this->view_data]);
         } else {
             $this->view_data['data'] = $this->userModel->idsal($idadmin);
-            return view('saisietemps/vi', $this->view_data);
+            return view('blueline/saisietemps/vi', ['view_data'=>$this->view_data]);
         }
     }
 }

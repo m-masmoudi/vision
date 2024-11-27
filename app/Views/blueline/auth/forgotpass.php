@@ -11,13 +11,13 @@
   </div>
   <div class="forgotpass-info"><?= lang('application.application_identify_account'); ?></div>
 
-  <di v class="form-group">
+  <div class="form-group">
     <label for="email"><?= lang('application.application_email'); ?></label>
     <input type="text" class="form-control" name="email" id="email"
       placeholder="<?= lang('application.application_email'); ?>">
   </div>
 
-  <input type="submit" style="text-align: center; width:100%; " class="btn btn-primary"
+  <input type="submit" style="text-align: center; width:100%; " class="btn btn-primary py-2"
     value="<?= lang('application.application_reset_password'); ?>" />
 
   <div class="forgotpassword text-end"><a

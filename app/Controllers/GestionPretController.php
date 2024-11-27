@@ -2,35 +2,34 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use App\Models\SalarieModel;
 use App\Models\PretsModel;
+use App\Models\SalarieModel;
+use App\Controllers\BaseController;
 
 class GestionPretController extends BaseController
 {
 	protected $salariesModel;
 	protected $pretsModel, $theme_view;
-	protected $view_data = [];
+
 
 	public function __construct()
 	{
-		parent::__construct();
+
 
 		// Use models for database interaction
 		$this->salariesModel = new SalarieModel();
 		$this->pretsModel = new PretsModel();
 
-		// Check user authentication
-		if (!session()->has('user_id')) {
-			return redirect('login');
-		}
+		
 	}
 
 	public function index()
 	{
 		$this->view_data['salaries'] = $this->salariesModel->findAll();
 		$this->view_data['prets'] = $this->pretsModel->orderBy('id', 'desc')->findAll();
-		view("blueline/rhpaie/gestionpret");
+		// var_dump($this->view_data['prets']);
+		// die;
+		return view("blueline/rhpaie/gestionpret",['view_data'=>$this->view_data]);
 	}
 
 	public function create()

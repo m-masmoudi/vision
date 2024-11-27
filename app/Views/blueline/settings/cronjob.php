@@ -23,7 +23,7 @@
 		<br>
 		<div class="form-group tt">
 		 <label><?=$this->lang->line('application_cronjob_active');?> 
-			 <a class="cursor po " data-toggle="popover" data-placement="right" data-content="<?=$this->lang->line('application_cronjob_help');?> <a target='_blank' href='https://luxsys.helpscoutdocs.com/article/16-cronjob-configuration'>More help!</a>" data-original-title="<?=$this->lang->line('application_cronjob_active');?>"><i class="ion-help-circled"></i></a>
+			 <a class="cursor po " data-bs-toggle="popover" data-placement="right" data-content="<?=$this->lang->line('application_cronjob_help');?> <a target='_blank' href='https://luxsys.helpscoutdocs.com/article/16-cronjob-configuration'>More help!</a>" data-original-title="<?=$this->lang->line('application_cronjob_active');?>"><i class="ion-help-circled"></i></a>
 		 </label>
 		 <input name="cronjob" type="checkbox" class="checkbox" data-labelauty="<?=$this->lang->line('application_cronjob_active');?>" value="1" <?php if($settings->cronjob == "1"){ ?> checked="checked" <?php } ?>>
         </div>
@@ -38,7 +38,7 @@
         <div class="form-group">
 		
 		<label><?=$this->lang->line('application_cronjob_address');?>
-		<a class="cursor po" href="#" data-toggle="popover" data-placement="right" rel="popover" data-content="<?=$this->lang->line('application_cronjob_address_help');?>" data-original-title="<?=$this->lang->line('application_cronjob_address');?>"><i class="ion-help-circled"></i></a> </label>  
+		<a class="cursor po" href="#" data-bs-toggle="popover" data-placement="right" rel="popover" data-content="<?=$this->lang->line('application_cronjob_address_help');?>" data-original-title="<?=$this->lang->line('application_cronjob_address');?>"><i class="ion-help-circled"></i></a> </label>  
 		<br>
 		<small style="padding-left:10px"> 
 			<span class="tag"><?=base_url()?>cronjob</span>

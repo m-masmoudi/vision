@@ -1,9 +1,7 @@
 <?php
 
-// Ensure this file is loaded properly in CodeIgniter 4.5
-namespace App\Helpers;
-
 use CodeIgniter\Config\Services;
+use App\Models\RefTypeOccurencesModel;
 
 if (!function_exists('get_theme_colors')) {
     /**
@@ -101,9 +99,9 @@ if (!function_exists('get_texte_occurence')) {
      */
     function get_texte_occurence($id_occ)
     {
-        $referentielsModel = model('App\Models\RefTypeOccurencesModel');
+        $referentielsModel = new RefTypeOccurencesModel();
 
         $result = $referentielsModel->getOccNameById($id_occ);
-        echo $result->name;
+        echo $result['name'];
     }
 }

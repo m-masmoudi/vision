@@ -251,14 +251,8 @@ class InvoiceModel extends Model
      */
     public function getExpensesStatisticForYear(int $year): array
     {
-        /*$expenses = $this->db->query("
-            SELECT SUBSTR(`date`, 1, 7) AS month, SUM(`value`) AS summary
-            FROM `expenses`
-            WHERE `date` BETWEEN '{$year}-01-01' AND '{$year}-12-31'
-            GROUP BY month
-        ")->getResultArray();
-
-        return $expenses;*/
+      
+        
         return $this->db->table('expenses')
             ->select("SUBSTR(`date`, 1, 7) AS month, SUM(`value`) AS summary")
             ->where('date >=', "{$year}-01-01")
@@ -274,18 +268,15 @@ class InvoiceModel extends Model
      **/
     public static function getExpensesStatisticFor($start, $end)
     {
-        $expensesByMonth = ExpenseModel::find_by_sql("SELECT 
-                `date`,
-                SUM(`value`) AS summary
-            FROM 
-                `expenses` 
-            WHERE 
-                `date` BETWEEN '$start' AND '$end' 
-            Group BY 
-                SUBSTR(`date`, 1, 7);
-            ");
+        $builder = (new ExpenseModel())->db->table('expenses');
+    $expensesByMonth = $builder->select('SUBSTR(`date`, 1, 7) AS month, SUM(`value`) AS summary')
+        ->where('date >=', $start)
+        ->where('date <=', $end)
+        ->groupBy('SUBSTR(`date`, 1, 7)')
+        ->get()
+        ->getResultArray();
 
-        return $expensesByMonth;
+    return $expensesByMonth;
     }
 
     /**
@@ -386,36 +377,32 @@ class InvoiceModel extends Model
      * @param string $end
      * @return array
      */
-    public function getStatisticFor(string $start, string $end): array
+    public function getStatisticFor(string $start, string $end)
     {
-        // First subquery for paid invoices
-        $subquery1 = $this->select('SUBSTR(paid_date, 1, 7) AS month, SUM(`sum`) AS sum')
-            ->table('invoices')
-            ->where('status', 'Paid')
-            ->where('paid_date >=', $start)
-            ->where('paid_date <=', $end)
-            ->groupBy('SUBSTR(paid_date, 1, 7');
-
-        // Second subquery for partially paid invoices
-        $subquery2 = $this->select('SUBSTR(T3.date, 1, 7) AS month, SUM(T3.amount) AS sum')
-            ->table('invoice_has_payments AS T3')
-            ->join('invoices AS T4', 'T3.invoice_id = T4.id', 'left')
-            ->where('T4.status', 'PartiallyPaid')
-            ->where('T3.date >=', $start)
-            ->where('T3.date <=', $end)
-            ->groupBy('SUBSTR(T3.date, 1, 7)');
-
-        // Combine both subqueries with UNION
-        $finalQuery = $this->db->query("
-        SELECT month, SUM(sum) AS summary
-        FROM (
-            {$subquery1->getQueryString()} 
-            UNION ALL 
-            {$subquery2->getQueryString()}
-        ) AS combined
-        GROUP BY month
-    ");
-
+        $subqueries = [
+            $this->db->table('invoices')
+                ->select('SUBSTR(paid_date, 1, 7) AS month, SUM(`sum`) AS sum')
+                ->where('status', 'Paid')
+                ->where('paid_date >=', $start)
+                ->where('paid_date <=', $end)
+                ->groupBy('SUBSTR(paid_date, 1, 7)')
+                ->getCompiledSelect(),
+    
+            $this->db->table('invoice_has_payments AS T3')
+                ->select('SUBSTR(T3.date, 1, 7) AS month, SUM(T3.amount) AS sum')
+                ->join('invoices AS T4', 'T3.invoice_id = T4.id', 'left')
+                ->where('T4.status', 'PartiallyPaid')
+                ->where('T3.date >=', $start)
+                ->where('T3.date <=', $end)
+                ->groupBy('SUBSTR(T3.date, 1, 7)')
+                ->getCompiledSelect()
+        ];
+    
+        $finalQuery = $this->db->table('(' . implode(' UNION ALL ', $subqueries) . ') AS combined')
+            ->select('month, SUM(sum) AS summary')
+            ->groupBy('month')
+            ->get();
+    
         return $finalQuery->getResultArray();
     }
 
@@ -488,5 +475,11 @@ class InvoiceModel extends Model
     public function getAllInvoicesCount()
     {
         return $this->countAllResults();
+    }
+    public function findBySQL(string $query, array $params = [])
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->query($query, $params);
+        return $builder->getResultArray();
     }
 }

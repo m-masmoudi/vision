@@ -2,47 +2,71 @@
 
 namespace App\Controllers;
 
-use App\Models\RefTypeOccurencesModel;
+use Config\OccConfig;
 use App\Models\SalarieModel;
 
 use App\Controllers\BaseController;
+use App\Models\RefTypeOccurencesModel;
 
 class DemandeCongeController extends BaseController
 {
     protected $referentiels;
-    protected $salarieModel;
+    protected $salarieModel,$config;
     public function __construct()
     {
         $this->referentiels = new RefTypeOccurencesModel();
         $this->salarieModel = new SalarieModel();
-        session_start();
+        $this->config=new  OccConfig();
+     
 
-        if (!session()->has('client') && !session()->has('user')) {
-            return redirect()->to('login');
-        }
+       
     }
 
 
     public function index()
     {
-        $userId = session()->get('user')->id;
-        $user_name = $this->salarieModel->getUserInfo($userId);
-
-        $solde = $user_name->droit_conge;
-        $salarie_id = $user_name->id;
-
-        $conges = $salarie_id ? $this->salarieModel->getConges($salarie_id) : [];
-
-        $data = [
-            'conges' => $conges,
-            'solde' => $solde,
-            'user' => "{$user_name->nom} {$user_name->prenom}",
-            'motif' => $this->referentiels->getReferentielsByIdType(config("app.type_id_motif_absence")),
-            'statut' => $this->referentiels->getReferentielsByIdType(config("app.type_id_statut_conges")),
-        ];
-
-        return view("rhpaie/all_for_user", $data);
+        // Get user ID from session or Auth
+        $userId = session()->get('user_id'); // Adjust key based on your session data structure
+         
+    
+        // Fetch user details
+        $user = $this->db->table('salaries')
+            ->select('salaries.id, salaries.nom, salaries.prenom, salaries.mail, salaries.droit_conge')
+            ->join('users', 'salaries.id = users.salaries_id')
+            ->where('users.id', $userId)
+            ->get()
+            ->getRow();
+    
+       
+    $salarieId='';
+    $solde='';
+      if($user){
+        $solde = $user->droit_conge;
+        $salarieId = $user->id;
+        $this->view_data['user'] = $user->nom . ' ' . $user->prenom;
+       }
+       
+    
+        // Fetch leaves (conges) for the user
+        $conges = [];
+        if ($salarieId) {
+            $conges = $this->db->table('t_pasa_conges')
+                ->where('id_salarie', $salarieId)
+                ->get()
+                ->getResult();
+        }
+    
+        // Fetch additional data for the view
+        $this->view_data['conges'] = $conges;
+        $this->view_data['solde'] = $solde;
+     
+        $this->view_data['motif'] = $this->referentiels ->getReferentielsByIdType($this->config->type_id_motif_absence);
+        $this->view_data['statut'] = $this->referentiels ->getReferentielsByIdType($this->config->type_id_statut_conges);
+    
+        // Load the view
+        return view('blueline/rhpaie/all_for_user', ['view_data' => $this->view_data]);
     }
+    
 
 
     /**
@@ -133,7 +157,7 @@ class DemandeCongeController extends BaseController
 
     public function create()
     {
-        $userId = session()->get('user')->id;
+        $userId = session()->get('user')['id'];
         $user_name = $this->salarieModel->getUserInfo($userId);
         $salarie_id = $user_name->id;
 

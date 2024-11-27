@@ -85,7 +85,7 @@
 			<label><?=$this->lang->line('application_login');?> <?=$this->lang->line('application_logo');?>
 				
 				<?php if($core_settings->login_logo != ""){ ?>
-						<button type="button" class="btn-option po " data-toggle="popover" data-placement="right"  data-content="<div style='padding:10px'><img src='<?=base_url();?><?=$core_settings->login_logo;?>'></div>" data-original-title="<?=$this->lang->line('application_login');?> <?=$this->lang->line('application_logo');?>"> <i class="ion-eye"></i></button>
+						<button type="button" class="btn-option po " data-bs-toggle="popover" data-placement="right"  data-content="<div style='padding:10px'><img src='<?=base_url();?><?=$core_settings->login_logo;?>'></div>" data-original-title="<?=$this->lang->line('application_login');?> <?=$this->lang->line('application_logo');?>"> <i class="ion-eye"></i></button>
 						<?php } ?>
 			</label>
 	                <div>

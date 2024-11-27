@@ -70,6 +70,16 @@ class ProjectHasTaskModel extends Model
             ->getResultArray();
     }
 
+    public function countTasksByProjectId($id)
+    {
+        // Using the query builder to count tasks for a specific project
+        $count = $this->db->table('project_has_tasks')
+                          ->where('project_id', $id)
+                          ->countAllResults(); // This counts the number of rows
+
+        return $count;
+    }
+
     public static function getStartTaskStats($projectID, $from, $to)
     {
         $builder = (new self())->builder();

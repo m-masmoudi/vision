@@ -2,23 +2,23 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use App\Database\Migrations\CreateAvoirHasPayments;
-use CodeIgniter\HTTP\RequestInterface;
-use CodeIgniter\HTTP\ResponseInterface;
-use Psr\Log\LoggerInterface;
 use App\Models\AvoirMOdel;
-use App\Models\AvoirHasItemModel;
+use App\Models\ItemsModel;
 use App\Models\ClientModel;
 use App\Models\CompanyModel;
-use App\Models\CompteBancaireModel;
 use App\Models\FactureModel;
-use App\Models\ItemsModel;
 use App\Models\ProjectModel;
 use App\Models\RefTypeModel;
-use App\Models\RefTypeOccurencesModel;
 use App\Models\SettingModel;
+use Psr\Log\LoggerInterface;
+use App\Models\AvoirHasItemModel;
+use App\Controllers\BaseController;
+use App\Models\CompteBancaireModel;
+use App\Models\RefTypeOccurencesModel;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Exceptions\PageNotFoundException;
+use App\Database\Migrations\CreateAvoirHasPayments;
 
 class AvoirController extends BaseController
 {
@@ -37,7 +37,7 @@ class AvoirController extends BaseController
 	protected $companyModel;
 	protected $avoirHasItemModel;
 	protected $compteBancaireModel, $avoirHasItem, $settingModel;
-	protected $view_data = [];
+	
 
 	protected $helpers = ['form', 'url'];
 
@@ -59,7 +59,7 @@ class AvoirController extends BaseController
 		$this->client = new ClientModel();  // Assuming you have a ClientModel
 		$this->avoirHasItemModel = new AvoirHasItemModel();
 		$this->compteBancaireModel = new CompteBancaireModel();
-		$this->avoirHasPaymentModel = new CreateAvoirHasPayments();
+		// $this->avoirHasPaymentModel = new CreateAvoirHasPayments();
 		$this->settingModel = new SettingModel();
 
 		if (!$this->client && (!session()->get('user') || session()->get('user')->admin != 1)) {
@@ -89,17 +89,32 @@ class AvoirController extends BaseController
 	// Chargement initial
 	public function index()
 	{
+		// Load settings from the settings model
 		$this->view_data['settings'] = $this->settingModel->first();
+	
+		// Retrieve all 'avoirs' records
 		$avoirs = $this->avoirModel->findAll();
-
-		foreach ($avoirs as $avoir) {
-			$refTypeCurrency = $this->refType->getRefTypeByName($avoir->currency)->id;
-			$avoir->chiffre = $this->referentiels->getReferentielsByIdType($refTypeCurrency)[0]->name;
+	
+		// Iterate over each 'avoir' record and add 'chiffre' if 'currency' is set
+		foreach ($avoirs as &$avoir) {
+			if (isset($avoir['currency'])) {
+				$refTypeCurrency = $this->refType->getRefTypeByName($avoir['currency'])['id'] ?? null;
+				if ($refTypeCurrency) {
+					$referentiels = $this->referentiels->getReferentielsByIdType($refTypeCurrency);
+					$avoir['chiffre'] = $referentiels[0]['name'] ?? 'N/A';
+				} else {
+					$avoir['chiffre'] = 'N/A';
+				}
+			} else {
+				$avoir['chiffre'] = 'N/A';
+			}
 		}
-
+	
+	    
 		$this->view_data['avoirs'] = $avoirs;
-		return view('avoir/all', $this->view_data);
+		return view('blueline/avoir/all', ['view_data' => $this->view_data]);
 	}
+	
 	//condition of filter
 	function filter($condition = FALSE, $year = FALSE)
 	{
@@ -210,17 +225,58 @@ class AvoirController extends BaseController
 		if (!$avoir) {
 			throw new PageNotFoundException('Avoir not found');
 		}
+	
 
 		$this->view_data['avoir'] = $avoir;
-		$this->view_data['project'] = $this->project->where('reference', $avoir->project_id)->first();
+		$this->view_data['project'] = $this->project->where('reference', $avoir['project_id'])->first();
 
-		$refType = $this->refType->getRefTypeByName($avoir->currency)->id;
-		$this->view_data['chiffre'] = $this->referentiels->getReferentielsByIdType($refType)->name;
+		$refType = $this->refType->getRefTypeByName($avoir['currency'])['id'];
+		
+		$referntial=$this->referentiels->where('id_type',$refType)->get()->getResultArray();
+		$this->view_data['chiffre'] = $referntial[0]['name'];
+		$this->view_data['company'] = $this->companyModel->find($avoir['company_id']);
+		$this->view_data['client'] = $this->client->find($this->view_data['company']['id']);
+		$avoirHasItem=new AvoirHasItemModel();
+		$this->view_data['items']=$avoirHasItem->where('avoir_id',$id)->get()->getResultArray();
+		$payments = $this->db->table('avoir_has_payments')
+                     ->where('avoir_id', $id)
+                     ->get()
+                     ->getResult();
 
-		$this->view_data['company'] = $this->companyModel->find($avoir->company_id);
-		$this->view_data['client'] = $this->companyModel->find($avoir->client_id);
+// Initialize payment and outstanding variables
+$payment = 0;
+$outstanding = 0;
 
-		return view('avoir/view', $this->view_data);
+// If payments exist, calculate the total payment and outstanding balance
+if (!empty($payments)) {
+    foreach ($payments as $value) {
+        $payment = sprintf("%01.2f", round($payment + $value->amount, 2));
+    }
+    // Assuming $sum is already defined elsewhere
+    $outstanding = sprintf("%01.2f", round($sum - $payment, 2));
+}
+
+// Prepare the data for updating the 'avoirs' table
+$data = [
+    'sum' => $sum,
+    'paid' => $payment,
+    'outstanding' => $outstanding,
+    'sumht' => $sumht
+];
+
+// Update the 'avoirs' table with the new data
+$this->db->table('avoirs')
+         ->where('id', $id)
+         ->update($data);
+
+// Now loop through the payments and get the type name from the referentiels model
+foreach ($payments as $payment) {
+    $payment->type = $this->referentiels->getReferentielsById($payment->type)->name;
+}
+
+// Pass the payments to the view
+$this->view_data['payments'] = $payments;
+		return view('blueline/avoir/view', ['view_data'=>$this->view_data]);
 	}
 
 	// Mettre à jour un avoir

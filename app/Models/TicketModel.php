@@ -124,10 +124,16 @@ class TicketModel extends Model
 
     public function getRows($postData)
     {
+        // Ensure length and start are integers
+        $length = isset($postData['length']) ? (int) $postData['length'] : 10;
+        $start = isset($postData['start']) ? (int) $postData['start'] : 0;
+    
         $this->_get_datatables_tickets($postData);
-        if ($postData['length'] != 1) {
-            $this->limit($postData['length'], $postData['start']);
+    
+        if ($length > 0) {
+            $this->limit($length, $start);
         }
+    
         return $this->findAll();
     }
 
@@ -145,12 +151,20 @@ class TicketModel extends Model
     // Period per ticket
     public function getPeriodPerTicket($id)
     {
-        $sql = "SELECT SUM(REPLACE(s.heures_pointees, '.30', '.50')) as periode
-                FROM saisie_temps s, tickets t 
-                WHERE s.ticket_id = t.id AND s.ticket_id = ?";
-        $query = $this->db->query($sql, [$id]);
-        return $query->getRow();
+        $db = \Config\Database::connect();
+
+        // Build the query using Query Builder
+        $builder = $db->table('saisie_temps as s');
+        $builder->select("SUM(REPLACE(s.heures_pointees, '.30', '.50')) as periode");
+        $builder->join('tickets as t', 's.ticket_id = t.id', 'inner');
+        $builder->where('s.ticket_id', $id);
+
+        // Execute the query and get the result
+        $query = $builder->get();
+
+        return $query->getResultArray();
     }
+
 
     public function getPeriodPerTickettt($ticket_id)
     {

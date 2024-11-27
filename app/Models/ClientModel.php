@@ -128,4 +128,9 @@ class ClientModel extends Model
 	{
 		return $this->find($id);
 	}
+
+	public function updateLastActive($id)
+	{
+		$this->db->table('clients')->where('id', $id)->update(['last_active' => time()]);
+	}
 }

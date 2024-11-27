@@ -2,30 +2,30 @@
 
 namespace App\Controllers;
 
-use App\Models\ItemModel;
-use App\Models\ProjectsModel;
-use App\Models\FactureModel;
-use App\Models\RefTypeModel;
-use App\Models\InvoiceHasItemModel;
-use App\Models\CompanyModel;
-use App\Models\EstimateModel;
-use App\Models\InvoiceModel;
-use App\Models\ItemsModel;
-use App\Models\ProjectModel;
-use App\Models\SalarieModel;
-use App\Models\RefTypeOccurencesModel;
-use App\Models\SettingModel;
-use App\Controllers\BaseController;
 use DateTime;
+use App\Models\ItemModel;
+use App\Models\ItemsModel;
+use App\Models\CompanyModel;
+use App\Models\FactureModel;
+use App\Models\InvoiceModel;
+use App\Models\ProjectModel;
+use App\Models\RefTypeModel;
+use App\Models\SalarieModel;
+use App\Models\SettingModel;
+use App\Models\EstimateModel;
+use App\Models\ProjectsModel;
+use App\Controllers\BaseController;
+use App\Models\InvoiceHasItemModel;
+use App\Models\RefTypeOccurencesModel;
 
 class EstimatesController extends BaseController
 {
 
-	private $idTypeRefDevis, $itemModel, $projectModel, $factureModel, $referentielsModel, $refTypeModel,
-		$invoiceHasItemModel, $companyModel, $estimateModel, $salarieModel, $db,
-		$settingModel, $theme_view, $invoiceModel, $parser, $pdf;
+	private $idTypeRefDevis, $itemModel2, $projectModel2, $factureModel, $referentielsModel, $refTypeModel,
+		$invoiceHasItemModel, $companyModel, $estimateModel, $salarieModel,
+		$settingModel, $theme_view, $invoiceModel2, $parser, $pdf;
 	private $submenu = [];
-	protected $view_data = [];
+
 
 	public function __construct()
 	{
@@ -35,8 +35,8 @@ class EstimatesController extends BaseController
 		}
 
 		// Load models using dependency injection
-		$this->itemModel = new ItemsModel();
-		$this->projectModel = new ProjectModel();
+		$this->itemModel2 = new ItemsModel();
+		$this->projectModel2 = new ProjectModel();
 		$this->factureModel = new FactureModel();
 		$this->referentielsModel = new RefTypeOccurencesModel();
 		$this->refTypeModel = new RefTypeModel();
@@ -45,26 +45,21 @@ class EstimatesController extends BaseController
 		$this->estimateModel = new EstimateModel();
 		$this->salarieModel = new SalarieModel();
 		$this->settingModel = new SettingModel();
-		$this->invoiceModel = new InvoiceModel();
+		$this->invoiceModel2 = new InvoiceModel();
 
 		helper(['form', 'file']);
-		$this->parser = \Config\Services::parser();
-		$this->pdf = \Config\Services::pdf();
-		$this->loadDatabase();
+		// $this->parser = \Config\Services::parser();
+		// $this->pdf = \Config\Services::pdf();
+		// $this->loadDatabase();
 
 		// Load helper
 		helper('calcul_helper');
 
 		// Load configuration
-		$this->idTypeRefDevis = config('App');
+		// $this->idTypeRefDevis = config('App');
 
 		// Set up submenus
 		$this->setupSubmenus();
-	}
-	private function loadDatabase()
-	{
-		// Assuming database is already set in the configuration
-		$this->db = \Config\Database::connect();
 	}
 
 	private function setupSubmenus()
@@ -86,82 +81,81 @@ class EstimatesController extends BaseController
 
 	// Afficher la liste des devis
 	public function index()
-	{
-		// Get request parameters with validation
-		$document = $this->request->getGet('document');
-		$department = $this->request->getGet('department');
+{
+    // $estimateModel = model('App\Models\EstimateModel');
+    // $refTypeModel = model('App\Models\RefTypeModel');
+    // $referentielsModel = model('App\Models\ReferentielsModel');
+    // $invoiceModel = model('App\Models\InvoiceModel');
 
-		// Load estimates with conditions
-		$this->view_data['estimates'] = $this->estimateModel->findAll();
+    $options = [
+        'conditions' => [
+            'estimate != ?',
+            0
+        ],
+        'orderBy' => 'id DESC'
+    ];
+    $this->view_data['estimates'] = $this->invoiceModel->findAll();
 
-		// Fetch invoices based on department
-		switch ($department) {
-			case 'mms':
-				$invoices = $this->estimateModel->getMms();
-				break;
-			case 'bim2d':
-				$invoices = $this->estimateModel->getBim2d();
-				break;
-			case 'bim3d':
-				$invoices = $this->estimateModel->getBim3d();
-				break;
-			default:
-				$invoices = [];
-				break;
-		}
+    // Get the name of devis
+    $this->view_data['estimates']['document'] = $this->request->getGet('document');
+    $this->view_data['estimates']['department'] = $this->request->getGet('department');
 
-		// Fetch invoices based on document type
-		switch ($document) {
-			case 'devis':
-				$invoices = $this->estimateModel->getDevisDocument();
-				break;
-			case 'attachment':
-				$invoices = $this->estimateModel->getAttDocument();
-				break;
-			default:
-				break;
-		}
+    switch ($this->view_data['estimates']['department']) {
+        case 'mms':
+            $this->view_data['estimates'] = $this->estimateModel->getMMS();
+            break;
+        case 'bim2d':
+            $this->view_data['estimates'] = $this->estimateModel->getBIM2D();
+            break;
+        case 'bim3d':
+            $this->view_data['estimates'] = $this->estimateModel->getBIM3D();
+            break;
+        default:
+            break;
+    }
 
-		// Initialize estimates data
-		$this->view_data['estimates'] = [
-			'document' => $document,
-			'department' => $department,
-			'invoices' => $invoices
-		];
+    switch ($this->view_data['estimates']['document']) {
+        case 'devis':
+            $this->view_data['estimates'] = $this->estimateModel->getDevisDocument();
+            break;
+        case 'attachement':
+            $this->view_data['estimates'] = $this->estimateModel->getAttDocument();
+            break;
+        default:
+            break;
+    }
 
-		// Fetch currency types and enrich invoices
-		foreach ($invoices as $invoice) {
-			$currencyRefType = $this->refTypeModel->getRefTypeByName($invoice->currency);
-			if ($currencyRefType) {
-				$currencyName = $this->referentielsModel->getReferentielsByIdType($currencyRefType->id);
-				$invoice->currency = $currencyName[0]->name ?? $invoice->currency; // Set currency name or fallback
+    $this->view_data['chiffre'] = (object) array();
+	foreach ($this->view_data['estimates'] as &$invoice) { // Use reference if modifying
+		if (isset($invoice['currency'])) {
+		
+			$idType = $this->refTypeModel->getRefTypeByName($invoice['currency'])['id'] ?? null;
+			
+			if ($idType) {
+				$chiffre = $this->referentielsModel->getReferentielsByIdType($idType)[0] ?? null;
+				if ($chiffre) {
+					$invoice['currency'] = $chiffre;
+				}
 			}
 		}
-
-		// Fetch due and paid estimates for this week
-		$now = time();
-		$beginningOfWeek = strtotime('last Monday', $now);
-		$endOfWeek = strtotime('next Sunday', $now) + 86400;
-
-		// Using Query Builder for safer queries
-		$this->view_data['estimates_due_this_month_graph'] = $this->db->table('invoices')
-			->select('count(id) AS amount, DATE_FORMAT(due_date, "%w") AS date_day, DATE_FORMAT(due_date, "%Y-%m-%d") AS date_formatted')
-			->where('UNIX_TIMESTAMP(due_date) >=', $beginningOfWeek)
-			->where('UNIX_TIMESTAMP(due_date) <=', $endOfWeek)
-			->where('estimate !=', 0)
-			->get()
-			->getResult();
-
-		$this->view_data['estimates_paid_this_month_graph'] = $this->db->table('invoices')
-			->select('count(id) AS amount, DATE_FORMAT(paid_date, "%w") AS date_day, DATE_FORMAT(paid_date, "%Y-%m-%d") AS date_formatted')
-			->where('UNIX_TIMESTAMP(paid_date) >=', $beginningOfWeek)
-			->where('UNIX_TIMESTAMP(paid_date) <=', $endOfWeek)
-			->where('estimate !=', 0)
-			->get()
-			->getResult();
-
-		view('estimates/all');
 	}
+
+    $this->view_data['estimates_due_this_month_graph'] = $this->invoiceModel->findBySQL(
+        'select count(id) AS "amount", DATE_FORMAT(`due_date`, "%w") AS "date_day", DATE_FORMAT(`due_date`, "%Y-%m-%d") AS "date_formatted" 
+         from invoices 
+         where UNIX_TIMESTAMP(`due_date`) >= ? AND UNIX_TIMESTAMP(`due_date`) <= ? AND estimate != 0',
+        [strtotime('last Monday'), strtotime('next Sunday') + 86400]
+    );
+
+    $this->view_data['estimates_paid_this_month_graph'] = $this->invoiceModel->findBySQL(
+        'select count(id) AS "amount", DATE_FORMAT(`paid_date`, "%w") AS "date_day", DATE_FORMAT(`paid_date`, "%Y-%m-%d") AS "date_formatted"
+         from invoices 
+         where UNIX_TIMESTAMP(`paid_date`) >= ? AND UNIX_TIMESTAMP(`paid_date`) <= ? AND estimate != 0',
+        [strtotime('last Monday'), strtotime('next Sunday') + 86400]
+    );
+
+    return view('blueline/estimates/all', ['view_data'=>$this->view_data]);
+}
 
 
 	//filtrer les devis
@@ -617,47 +611,63 @@ class EstimatesController extends BaseController
 	// Afficher le détail d'un devis
 	public function view($id = null)
 	{
-		$data = [
-			'submenu' => [
-				lang('application_back') => 'estimates',
-			],
-			'estimate' => $this->invoiceModel->find($id),
-		];
-
+	
+		// $this->view_data = [
+		// 	'submenu' => [
+		// 		lang('application_back') => 'estimates',
+		// 	],
+		// 	'estimate' => $this->invoiceModel->find($id),
+		// ];
+		$this->view_data['estimate'] = $this->invoiceModel->find($id);
 		// Check if the estimate exists and get project details
-		if ($data['estimate'] && $data['estimate']->project_id != 0) {
-			$data['project'] = $this->projectModel->find($data['estimate']->project_id);
+		if ($this->view_data['estimate'] && $this->view_data['estimate']['project_id'] != 0) {
+			$this->view_data['project'] = $this->projectModel->find($this->view_data['estimate']['project_id']);
 		}
 
 		// Get currency and other details
-		$refType = $this->settingModel->getRefTypeByName($data['estimate']->currency)->id;
-		$data['chiffre'] = $this->settingModel->getReferentielsByIdType($refType)[0]->name;
-		$data['company'] = $this->companyModel->find($data['estimate']->company_id);
+		$refType = $this->refTypeModel->getRefTypeByName($this->view_data['estimate']['currency'])['id'];
+		$this->view_data['chiffre'] = $this->referentielsModel->getReferentielsByIdType($refType)[0]['name'];
+		$this->view_data['company'] = $this->companyModel->find($this->view_data['estimate']['company_id']);
+		// var_dump($this->view_data['company']);
+		// die;
 
 		// Retrieve core settings
 		$option = ["id_vcompanies" => session()->get('current_company')];
-		$data['core_settings'] = $this->settingModel->find($option);
+		
+		// var_dump($this->view_data['core_settings']);
+		// die;
 
 		// Retrieve estimate items
-		$data['items'] = $this->invoiceModel->getInvoiceItems($id);
+		$invoiceHasItemModel = new InvoiceHasItemModel();
+$invoice = $this->invoiceModel->find($id);
+
+if ($invoice) {
+    $this->view_data['items'] = $invoiceHasItemModel
+        ->where('invoice_id', $invoice['id']) // Use the `id` key from the retrieved invoice
+        ->findAll(); // Use `findAll()` instead of `get()->getResultArray()`
+} else {
+    $this->view_data['items'] = [];
+}
 
 		// Calculate sums and totals
-		$totals = $this->calculateTotals($data['items'], $data['company']->tva, $data['estimate']->discount);
-		$data['sumht'] = $totals['sumht'];
-		$data['sum'] = $totals['sum'];
+		$totals = $this->calculateTotals($this->view_data['items'], $this->view_data['company']['tva'], $this->view_data['estimate']['discount']);
+		$this->view_data['sumht'] = $totals['sumht'];
+		$this->view_data['sum'] = $totals['sum'];
+		$this->view_data['totalTVA']=$totals;
 
 		// Update the estimate
 		$this->invoiceModel->update($id, [
-			'sumht' => $data['sumht'],
-			'sum' => $data['sum']
+			'sumht' => $this->view_data['sumht'],
+			'sum' => $this->view_data['sum']
 		]);
 
 		// Get contact details
-		$contact_id = $data['company']->client_id;
-		$data['contact_principale'] = $this->companyModel->getClientById($contact_id);
+		$contact_id = $this->view_data['company']['client_id'];
+		$this->view_data['contact_principale'] = $this->companyModel->getClientById($contact_id);
 
-		return view('estimates/view', $data);
+		return view('blueline/estimates/view', ['view_data'=>$this->view_data]);
 	}
+
 
 	public function estimateToInvoice($id = null)
 	{
@@ -719,8 +729,8 @@ class EstimatesController extends BaseController
 		$totalTVA = 0;
 
 		foreach ($items as $value) {
-			$SousTotal = ($value->amount * $value->value) - ($value->amount * $value->value * $value->discount) / 100;
-			$SousTotalTVA = $SousTotal + ($SousTotal * $value->tva) / 100;
+			$SousTotal = ($value['amount'] * $value['value']) - ($value['amount'] * $value['value']* $value['discount']) / 100;
+			$SousTotalTVA = $SousTotal + ($SousTotal * $value['tva']) / 100;
 			$totalTVA += $SousTotalTVA;
 			$total += $SousTotal;
 		}

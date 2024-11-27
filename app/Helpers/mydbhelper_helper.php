@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Helpers;
-
-use App\Models\ItemFamilyModel;
 use App\Models\CompanyModel;
 use App\Models\InvoiceModel;
+use App\Models\ItemFamilyModel;
 use App\Models\RefTypeOccurencesModel;
 use App\Models\RefTypeOccurrencesModel;
 

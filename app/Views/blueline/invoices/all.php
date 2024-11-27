@@ -1,11 +1,17 @@
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('content') ?>
 <div class="col-sm-12  col-md-12 main">  
     <!-- statistiques sur les factures -->
     <div class="row tile-row">
-		<div class="col-md-2 col-xs-12 tile blue"><h1><span><?=$this->lang->line('application_invoices');?></span></h1>
+		<div class="col-md-2 col-xs-12 tile blue"><h1><span><?=lang('application.application_invoices');?></span></h1>
 		</div>
-		<div class="col-md-3 col-xs-3 tile"><div class="icon-frame hidden-xs"><i class="ion-ios-bell"></i> </div><h1> <?php if(isset($invoices_due_this_month)){echo $invoices_due_this_month;} ?> <span><?=$this->lang->line('application_invoices');?></span></h1><h2><?=$this->lang->line('application_due_this_month');?></h2>
+		<div class="col-md-3 col-xs-3 tile"><div class="icon-frame hidden-xs"><i class="ion-ios-bell"></i> </div><h1> <?php
+
+                                                            use Config\OccConfig;
+
+ if(isset($invoices_due_this_month)){echo $invoices_due_this_month;} ?> <span><?=lang('application.application_invoices');?></span></h1><h2><?=lang('application.application_due_this_month');?></h2>
 		</div>
-		<div class="col-md-3 col-xs-3 tile"><div class="icon-frame secondary hidden-xs"><i class="ion-ios-analytics"></i> </div><h1> <?php if(isset($invoices_paid_this_month)){echo $invoices_paid_this_month;} ?> <span><?=$this->lang->line('application_invoices');?></span></h1><h2><?=$this->lang->line('application_paid_this_month');?></h2>
+		<div class="col-md-3 col-xs-3 tile"><div class="icon-frame secondary hidden-xs"><i class="ion-ios-analytics"></i> </div><h1> <?php if(isset($invoices_paid_this_month)){echo $invoices_paid_this_month;} ?> <span><?=lang('application.application_invoices');?></span></h1><h2><?=lang('application.application_paid_this_month');?></h2>
 		</div>
 		<div class="col-md-3 col-xs-3 tile hidden-xs">
 			<div style="width:97%; margin-top: -4px; margin-bottom: 17px; height: 80px;">
@@ -14,36 +20,31 @@
 		</div>
 	</div>
 	<!-- boutons d'actions -->   
-	<div class="row">
-    <a href="<?=base_url()?>invoices/create" class="btn btn-primary" data-toggle="mainmodal"><?=$this->lang->line('application_create_invoice');?></a>
-    <a type="button" class="btn btn-success" href="<?=base_url()?>exporter/factures_as_excel"><?=$this->lang->line('application_export')?></a>
+	<div class="mb-3">
+    <a href="<?=base_url()?>invoices/create" class="btn btn-primary" data-toggle="mainmodal"><?=lang('application.application_create_invoice');?></a>
+    <a type="button" class="btn btn-success" href="<?=base_url()?>exporter/factures_as_excel"><?=lang('application.application_export')?></a>
 				<a href="https://vision.bimmapping.com/exportFacture/indexx.php"  class="btn btn-primary" data-toggle="mainmodal">Exporter 2</a>
 
     <div class="btn-group pull-right-responsive margin-right-3">
         <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-            <?php $last_uri = $this->uri->segment($this->uri->total_segments());
+		
+            <?php $last_uri = $view_data['act_uri'];
 				
 				if($last_uri != "invoices" && is_numeric($last_uri) == false){
-					if($this->lang->line('application_'.$last_uri) == false) { 
+					if(lang('application.application_'.$last_uri) == false) { 
 						echo $last_uri; 
 					} else {
-						echo $this->lang->line('application_'.$last_uri);
+						echo lang('application.application_'.$last_uri);
 					}
-					}else{echo $this->lang->line('application_all');} ?> <span class="caret"></span>
+					}else{echo lang('application.application_all');} ?> <span class="caret"></span>
         </button>
-        <ul class="dropdown-menu pull-right" role="menu">
-            <?php foreach ($submenu as $name=>$value):?>
-	            <li><a id="<?php $val_id = explode("/", $value); if(!is_numeric(end($val_id))){echo end($val_id);}else{$num = count($val_id)-2; echo $val_id[$num];} ?>"
-				<?php $filter = substr($val_id[1], 0, 6);
-					$val_id[1] = str_replace($filter , '', $val_id[1]);
-						$value = $val_id[0].'/'.$filter.'/'.$val_id[1];  ?> href="<?=site_url($value);?>"><?=$name?></a></li>
-				<?php endforeach;?>
-        </ul>
+    
     </div>
 	<?php $years = array_combine(range(date("Y"), 2013), range(date("Y"),2013)); ?>
 	<div class="btn-group pull-right-responsive margin-right-3">
 		<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">	
-			<?php $last_uri = $this->uri->segment($this->uri->total_segments());			
+			
+			<?php $last_uri = $view_data['act_uri'];			
 				if($last_uri != "invoices" && is_numeric($last_uri) == true){
 					echo  $last_uri; 
 				}else
@@ -61,76 +62,77 @@
 	
 	<!-- tableau de la liste des factures -->
 	<div class="row">
-	<div class="table-head"><?=$this->lang->line('application_invoices');?></div>
+	<div class="table-head"><?=lang('application.application_invoices');?></div>
 		<div class="table-div">
 			<table class="dataSorting table" id="invoices" rel="<?=base_url()?>" cellspacing="0" cellpadding="0">
 				<thead>
-					<th><?=$this->lang->line('application_pdf')?></th>
+					<th><?=lang('application.application_pdf')?></th>
 					<th hidden></th>
-					<th width="70px" class="hidden-xs"><?=$this->lang->line('application_invoice_id');?></th>
-					<th><?=$this->lang->line('application_client');?></th>
-					<th><?=$this->lang->line('application_asset');?></th>
-					<th class="hidden-xs"><?=$this->lang->line('application_issue_date');?></th>
-					<th class="hidden-xs"><?=$this->lang->line('application_currency');?></th>
-					<th class="hidden-xs"><?=$this->lang->line('application_total_ht');?></th>
-					<th class="hidden-xs"><?=$this->lang->line('application_total_ttc');?></th>
+					<th width="70px" class="hidden-xs"><?=lang('application.application_invoice_id');?></th>
+					<th><?=lang('application.application_client');?></th>
+					<th><?=lang('application.application_asset');?></th>
+					<th class="hidden-xs"><?=lang('application.application_issue_date');?></th>
+					<th class="hidden-xs"><?=lang('application.application_currency');?></th>
+					<th class="hidden-xs"><?=lang('application.application_total_ht');?></th>
+					<th class="hidden-xs"><?=lang('application.application_total_ttc');?></th>
 					<th>Etat</th>
-					<th><?=$this->lang->line('application_action');?></th>
+					<th><?=lang('application.application_action');?></th>
 				</thead>
-				<?php foreach ($invoices as $value):?>
-
-				<tr id="<?=$value->id;?>" >
+				
+				<?php foreach ($view_data['invoices'] as $value):?>
+				
+				<tr id="<?=$value['id'];?>" >
 				<td class="option" width="6%">
-					<a target="_blank" href="<?=base_url()?>invoices/preview/<?=$value->id;?>/show" class="btn-option"><i class="" title="PDF"><img src="<?=base_url()?>assets/blueline/images/pdf.png" alt=""></i></a>
+					<a target="_blank" href="<?=base_url()?>invoices/preview/<?=$value['id'];?>/show" class="btn-option"><i class="" title="PDF"><img src="<?=base_url()?>assets/blueline/images/pdf.png" alt=""></i></a>
 				</td>
-				<td class="hidden-xs" hidden><?=$value->id;?></td>
-				<td class="hidden-xs"><?=$value->estimate_num;?></td>
+				<td class="hidden-xs" hidden><?=$value['id'];?></td>
+				<td class="hidden-xs"><?=$value['estimate_num'];?></td>
 				<td class=" 
 					<?php 
-					$this->load->helper('mydbhelper_helper');
-					$company = getcompany($value->company_id);
-					echo ' " title="'.$company->name; ?>">
+				
+					$company = getcompany($value['company_id']);
+					echo ' " title="'.$company['name']; ?>">
 					<span class="label label-info">
 					<?php 
-						echo $company->name; 
+						echo $company['name']; 
 					?>
 					</span>
 				</td>
-				<td class=" <?php echo '" title="'.$value->subject; ?>"
+				<td class=" <?php echo '" title="'.$value['subject']; ?>"
 								><?php $max = 15;
-						 if (strlen($value->subject) >= $max) {
-						$subject = substr($value->subject, 0, $max).'...';
+						 if (strlen($value['subject']) >= $max) {
+						$subject = substr($value['subject'], 0, $max).'...';
 						 }else{
-							$subject = $value->subject; 
+							$subject = $value['subject']; 
 						 }
 						 echo $subject;
 				?>  </td>
-				<td class="hidden-xs"><span><?php $unix = human_to_unix($value->issue_date.' 00:00'); 
-				echo '<span class="hidden">'.$unix.'</span> '; echo date($core_settings->date_format, $unix);?></span></td>
-				<td class="hidden-xs"><span class="label"><?=$value->currency;?></span></td>
+				<td class="hidden-xs"><span><?php $unix = human_to_unix($value['issue_date'].' 00:00'); 
+				echo '<span class="hidden">'.$unix.'</span> '; echo date($view_data['core_settings']['date_format'], $unix);?></span></td>
+				<td class="hidden-xs"><span class="label"><?=$value['currency'];?></span></td>
 				<!-- TOTAL TTC -->
-				<td class="hidden-xs nowrap"><?php echo number_format($value->sumht,$value->chiffre,'.',' ');?></td>
-				<?php $this->load->helper('mydbhelper_helper');
-				$company = getcompany($value->company_id);
-				$TTC = $value->sum ; 
-				$TTH = $value->sumht; 
-				if($value->deduction > 0){
-					$TTC = $TTC - ($TTC-$value->timbre_fiscal)*$value->deduction/100; 
-					$TTH = $TTH - ($TTH*$value->deduction)/100;
+				<td class="hidden-xs nowrap"><?php echo number_format($value['sumht'],$value['chiffre'],'.',' ');?></td>
+				<?php 
+				$company = getcompany($value['company_id']);
+				$TTC = $value['sum'] ; 
+				$TTH = $value['sumht']; 
+				if($value['deduction'] > 0){
+					$TTC = $TTC - ($TTC-$value['timbre_fiscal'])*$value['deduction']/100; 
+					$TTH = $TTH - ($TTH*$value['deduction'])/100;
 				}
-				if($company->timbre_fiscal == 0){ 
-					$TTH = $TTH + $value->timbre_fiscal; 
+				if($company['timbre_fiscal'] == 0){ 
+					$TTH = $TTH + $value['timbre_fiscal']; 
 				}
-				 if ($company->tva == 1)  { ?>
+				 if ($company['tva'] == 1)  { ?>
 					<td class="hidden-xs nowrap">	
-						<?php if(isset($TTH)){echo  number_format($TTH,$value->chiffre,'.',' ');} ?> 
+						<?php if(isset($TTH)){echo  number_format($TTH,$value['chiffre'],'.',' ');} ?> 
 					</td>
 				<?php } else { ?>
-					<td class="hidden-xs nowrap"><?php if(isset($TTC)){echo  number_format($TTC,$value->chiffre,'.',' ');} ?> </td>
+					<td class="hidden-xs nowrap"><?php if(isset($TTC)){echo  number_format($TTC,$value['chiffre'],'.',' ');} ?> </td>
 				<?php } ?>
 				
 				<!-- Etats de la facture -->
-				<td class="<?=$value->status?>"><?php get_etat_color($value->status) ?></td>
+				<td class="<?=$value['status']?>"><?php echo get_etat_color(intval($value['status'])) ?></td>
 				
 				<td class="option" width="12%">
 					<div class="dropdown">
@@ -138,19 +140,21 @@
 						 <i class="fa fa-cogs"></i> Outils
 						<span class="caret"></span></button>
 						<ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-						<?php if ($value->status == $this->config->item("occ_facture_paye") 
-							|| $value->status == $this->config->item("occ_facture_p_paye")  
-							|| $value->status == $this->config->item("occ_facture_avoir") ) { ?>
+						<?php
+						$config = new OccConfig();
+						if ($value['status'] == $config->occ_facture_paye
+							|| $value['status'] == $config->occ_facture_p_paye
+							|| $value['status'] == $config->occ_facture_avoir ) { ?>
 						  <li><a style= "background-Color:grey; cursor:none;" data-toggle="mainmodal"><i class="fa fa-edit" title="Facture payée" readonly> Modifier</i></a></li>
 						<?php } else {?>  
-						  <li role="presentation"><a href="<?=base_url()?>invoices/update/<?=$value->id;?>" class="btn-option"  data-toggle="mainmodal"><i class="fa fa-edit" title="Modifier"> Modifier</i></a></li>
+						  <li role="presentation"><a href="<?=base_url()?>invoices/update/<?=$value['id'];?>" class="btn-option"  data-toggle="mainmodal"><i class="fa fa-edit" title="Modifier"> Modifier</i></a></li>
 						<?php } ?>
-						  <li role="presentation"><a href="<?=base_url()?>invoices/view/<?=$value->id;?>" class="btn-option"><i class="fa fa-eye" title="visualisez"> Visualisez</i></a></li>
-						  <li role="presentation"><a  href="<?=base_url()?>invoices/duplicate/<?=$value->id?>" class="btn-option"><i class="fa fa-clone" aria-hidden="true" title="Dupliquer"> Dupliquer</i></a></li>
+						  <li role="presentation"><a href="<?=base_url()?>invoices/view/<?=$value['id'];?>" class="btn-option"><i class="fa fa-eye" title="visualisez"> Visualisez</i></a></li>
+						  <li role="presentation"><a  href="<?=base_url()?>invoices/duplicate/<?=$value['id']?>" class="btn-option"><i class="fa fa-clone" aria-hidden="true" title="Dupliquer"> Dupliquer</i></a></li>
 						  <!-- trasform to avoir -->
-						  <li role="presentation"><a  href="<?=base_url()?>invoices/PassToAvoir/<?=$value->id?>" class="btn-option"><i class="fa fa-cog" aria-hidden="true" title="Dupliquer"> <?=$this->lang->line('application_avoir');?></i></a></li>
+						  <li role="presentation"><a  href="<?=base_url()?>invoices/PassToAvoir/<?=$value['id']?>" class="btn-option"><i class="fa fa-cog" aria-hidden="true" title="Dupliquer"> <?=lang('application.application_avoir');?></i></a></li>
 						  <!--sent mail-->
-						  <li role="presentation"><a  href="<?=base_url()?>invoices/sendfiles/<?=$value->id?>" class="btn-option"><i class="fa fa-envelope" aria-hidden="true" title="Sent"> <?=$this->lang->line('application_sent_to');?></i></a></li>
+						  <li role="presentation"><a  href="<?=base_url()?>invoices/sendfiles/<?=$value['id']?>" class="btn-option"><i class="fa fa-envelope" aria-hidden="true" title="Sent"> <?=lang('application.application_sent_to');?></i></a></li>
 						</ul>
 					</div>
 				</td>
@@ -180,8 +184,8 @@ $(document).ready(function(){
 	$labels = '';
 
 	//First Dataset            
-	foreach ($invoices_paid_this_month_graph as $value) {
-	  $days[$value->date_formatted] = $value->amount;
+	foreach ($view_data['invoices_paid_this_month_graph'] as $value) {
+	  $days[$value['date_formatted']] = $value['amount'];
 	}
 	foreach ($this_week_days as $selected_day) {
 	  $y = 0;
@@ -192,9 +196,7 @@ $(document).ready(function(){
 		 } 
 
 	//Second Dataset
-	foreach ($invoices_due_this_month_graph as $value) {
-	  $days[$value->date_formatted] = $value->amount;
-	}
+	
 	foreach ($this_week_days as $selected_day2) {
 	  $y = 0;
 		if(isset($days[$selected_day2])){ $y = $days[$selected_day2];}
@@ -209,7 +211,7 @@ var ctx = document.getElementById("tileChart").getContext("2d");
         labels: [<?=$labels?>],
         datasets: [
         {
-          label: "<?=$this->lang->line('application_paid');?>",
+          label: "<?=lang('application.application_paid');?>",
           backgroundColor: "rgba(51, 195, 218, 0.3)",
           borderColor: "rgba(51, 195, 218, 1)",
           pointBorderColor: "rgba(51, 195, 218, 0)",
@@ -263,3 +265,4 @@ var ctx = document.getElementById("tileChart").getContext("2d");
 });
 
 </script>
+<?= $this->endSection() ?>

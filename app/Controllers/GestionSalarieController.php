@@ -2,11 +2,11 @@
 
 namespace App\Controllers;
 
+use CodeIgniter\Files\File;
+use App\Models\RefTypeModel;
 use App\Models\SalarieModel;
 use App\Models\RefTypeOccurencesModel;
-use App\Models\RefTypeModel;
 use CodeIgniter\HTTP\RedirectResponse;
-use CodeIgniter\Files\File;
 
 class GestionSalarieController extends BaseController
 {
@@ -27,8 +27,8 @@ class GestionSalarieController extends BaseController
 
 	public function index(): string
 	{
-		$data['salaries'] = $this->salarieModel->findAll();
-		return view('rhpaie/gestionsalarie', $data);
+		$this->view_data['salaries'] = $this->salarieModel->findAll();
+		return view('blueline/rhpaie/gestionsalarie', ['view_data'=>$this->view_data]);
 	}
 
 	public function create(): RedirectResponse|string
@@ -142,6 +142,47 @@ class GestionSalarieController extends BaseController
 			return view('rhpaie/salaries/editdetail1', $data);
 		}
 	}
-
+	public function view($id = false)
+	{
+		if ($this->request->getPost()) {
+			return redirect()->to('gestionsalarie');
+		} else {
+			// Get the 'genre' data
+			$genre = $this->db->table('ref_type_occurences')
+							  ->select('*')
+							  ->where('id_type', 13)
+							  ->get()
+							  ->getResult();
+	
+			// Get the 'situations' data
+			$situations = $this->db->table('ref_type_occurences')
+								   ->select('*')
+								   ->where('id_type', 12)
+								   ->get()
+								   ->getResult();
+	
+			// Get the 'fonctions' data
+			$fonctions = $this->db->table('ref_type_occurences')
+								  ->select('*')
+								  ->where('id_type', 19)
+								  ->get()
+								  ->getResult();
+	
+			// Fetch the 'salarie' information using the model
+			$salarieModel = new \App\Models\SalarieModel(); // Assuming your model is named 'SalarieModel'
+			$salarie = $salarieModel->getInfoSalarie($id);
+	
+			// Pass data to the view
+			$this->view_data['genre'] = $genre;
+			$this->view_data['situations'] = $situations;
+			$this->view_data['fonctions'] = $fonctions;
+			$this->view_data['salarie'] = $salarie;  // Assuming getInfoSalarie returns an array
+			$this->view_data['idpnl'] = $id;
+			$this->view_data['form_action'] = 'gestionsalarie/view/' . $id;
+	
+			// Load the view
+			return view('blueline/rhpaie/salaries/view', ['view_data'=>$this->view_data]);
+		}
+	}
 	// Additional methods like updatecontact, etc., should follow the same structure.
 }

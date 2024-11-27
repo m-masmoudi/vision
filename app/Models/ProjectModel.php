@@ -42,6 +42,46 @@ class ProjectModel extends Model
     'date_relance_3'
   ];
 
+
+  public function getActivities($project_id)
+  {
+    return $this->db->table('project_has_activities')
+    ->where('project_id', $project_id)
+    ->orderBy('datetime', 'DESC')
+    ->get()
+    ->getResult();
+  }
+  public function getProjectMilestones(int $projectId)
+  {
+      return $this->db->table('project_has_milestones')
+          ->where('project_id', $projectId)
+          ->orderBy('orderindex')
+          ->get()
+          ->getResult();
+  }
+  public function getInvoices($project_id)
+  {
+      return $this->db->table('project_has_invoices')
+          ->where('project_id', $project_id)
+          ->get()
+          ->getResult();
+  }
+  public function getFiles($project_id)
+  {
+      return $this->db->table('project_has_files')
+          ->where('project_id', $project_id)
+          ->get()
+          ->getResult();
+  }
+
+  public function getProjectWorkers(int $projectId)
+  {
+      return $this->db->table('project_has_workers')
+          ->where('project_id', $projectId)
+          ->get()
+          ->getResult();
+  }
+
   public function overdueByDate(array $compArray, string $date): array
   {
     $builder = $this->builder();
@@ -137,4 +177,171 @@ class ProjectModel extends Model
   {
     return $this->countAllResults();
   }
+
+  public function getRows(array $postData = [])
+    {
+        $builder = $this->builder();
+        $this->_get_datatables_query($builder, $postData);
+
+        if (isset($postData['length']) && $postData['length'] != -1) {
+            $builder->limit($postData['length'], $postData['start'] ?? 0);
+        }
+
+        return $builder->get()->getResult();
+    }
+
+    public function getRows2(array $postData = [])
+    {
+        $builder = $this->builder();
+        $this->_get_datatables_query2($builder, $postData);
+
+        if (isset($postData['length']) && $postData['length'] != -1) {
+            $builder->limit($postData['length'], $postData['start'] ?? 0);
+        }
+
+        return $builder->get()->getResult();
+    }
+
+    // Count all records
+    public function countAll()
+    {
+        return $this->countAllResults();
+    }
+
+    // Count records based on filter parameters
+    public function countFiltered(array $postData = [])
+    {
+        $builder = $this->builder();
+        $this->_get_datatables_query($builder, $postData);
+        return $builder->countAllResults(false);
+    }
+
+    public function countFiltered2(array $postData = [])
+    {
+        $builder = $this->builder();
+        $this->_get_datatables_query2($builder, $postData);
+        return $builder->countAllResults(false);
+    }
+
+    // Datatable query for getRows()
+    private function _get_datatables_query($builder, array $postData = [])
+    {
+        $idss = $this->user->salaries_id;  // Assuming 'salaries_id' is part of the user session data
+        $naturename = $this->idsal($idss); // Assuming this method returns a nature name based on 'salaries_id'
+    
+        // Set up the query builder
+        $builder->select('projects.*, progress_ref.name as state, projects.reference as reference_project, projects.name as project, ref_type_occurences.name as nature, companies.name as client')
+                ->from('projects')
+                ->join('ref_type_occurences', 'ref_type_occurences.id = projects.type_projet')
+                ->join('companies', 'companies.id = projects.company_id', 'left')
+                ->join('progress_ref', 'progress_ref.ref = projects.progress')
+                ->where('ref_type_occurences.name', $naturename)
+                ->orderBy('projects.creation_date', 'desc');
+    
+        // Apply search filters
+        if (!empty($postData['search']['value'])) {
+            foreach ($this->column_search as $i => $item) {
+                if ($i === 0) {
+                    $builder->groupStart(); // Begin the OR group if it's the first column
+                    $builder->like($item, $postData['search']['value']);
+                } else {
+                    $builder->orLike($item, $postData['search']['value']);
+                }
+    
+                if (count($this->column_search) - 1 == $i) {
+                    $builder->groupEnd(); // End the OR group after the last column
+                }
+            }
+        }
+    
+        // Apply ordering if provided
+        if (isset($postData['order'])) {
+            $orderColumn = $this->column_order[$postData['order'][0]['column']];
+            $orderDirection = $postData['order'][0]['dir'];
+            $builder->orderBy($orderColumn, $orderDirection);
+        } else if (isset($this->order)) {
+            // Default ordering if no specific order is provided
+            $order = $this->order;
+            $builder->orderBy(key($order), $order[key($order)]);
+        }
+    }
+         
+
+    // Datatable query for getRows2()
+    private function _get_datatables_query2($builder, array $postData = [])
+    {
+        // Set up the query builder
+        $builder->select('*')
+                ->select('proj.id as proj_id, progress_ref.name as state, proj.reference as reference_project, proj.name as project_name, ref_type_occurences.name as nature, companies.name as client')
+                ->from('projects as proj')
+                ->join('ref_type_occurences', 'ref_type_occurences.id = proj.type_projet')
+                ->join('companies', 'companies.id = proj.company_id', 'left')
+                ->join('progress_ref', 'progress_ref.ref = proj.progress')
+                ->orderBy('proj.creation_date', 'desc');
+    }
+
+
+    public function getPeriodTickets_Byprojet(int $id_projet = null, bool $total = false, bool $sous_proj_only = false): array
+    {
+        $builder = $this->db->table('tickets as t')
+                            ->join('saisie_temps as st', 't.id = st.ticket_id', 'left');
+    
+     
+        if ($sous_proj_only) {
+        
+          $subQuery = $this->db->table('project_has_sub_projects as sp')
+                         ->select('id as sub_project_id_saisie, project_id as project_pere')
+                         ->where((!is_null($id_projet)) ? 'sp.project_id = ' . $id_projet : '1=1')
+                         ->getCompiledSelect();
+          
+          $builder->from("($subQuery) as p");
+          $builder->join('tickets as t', 't.sub_project_id = p.sub_project_id_saisie', 'left');
+          
+      } else {
+     
+          $subQuery = $this->db->table('projects')
+                         ->select('id as project_id_saisie, id as project_pere')
+                         ->where((!is_null($id_projet)) ? 'id = ' . $id_projet : '1=1')
+                         ->getCompiledSelect();
+          
+          $builder->from("($subQuery) as p");
+          $builder->join('tickets as t', 't.project_id = p.project_id_saisie', 'left');
+      }
+        $builder = $this->db->table('saisie_temps as st')
+        ->select("
+            CAST(REPLACE(SUBSTRING(SUBSTRING_INDEX(st.heures_pointees, '.', 1), 
+                LENGTH(SUBSTRING_INDEX(st.heures_pointees, '.', 1 - 1)) + 1), 
+                '.', '') AS UNSIGNED) AS nb_heures,
+            LPAD(CAST(REPLACE(SUBSTRING(SUBSTRING_INDEX(st.heures_pointees, '.', 2), 
+                LENGTH(SUBSTRING_INDEX(st.heures_pointees, '.', 2 - 1)) + 1), 
+                '.', '') AS UNSIGNED), 2, '0') AS nb_minutes
+        ", false);
+ 
+   
+    
+      
+      
+    
+        $query = $builder->get();
+        
+        $tab = $query->getResultArray();
+ 
+        // Process hours and minutes calculations in PHP
+        foreach ($tab as $key => $row){
+        
+          $total_heures = getTotalHeures($row['nb_heures'], $row['nb_minutes']);
+          $tab[$key]['total'] = $total_heures .'.'. getResteMinutes($row['nb_minutes']); //$row->nb_heures .'.'.$row->nb_minutes;
+          $tab[$key]['nb_days'] = FLOOR($total_heures / 8);
+          $tab[$key]['nb_days_mod ']= $total_heures % 8;
+      }
+    
+        return $tab;
+    }
+    
+    
+
+    
+    
+    
+
 }

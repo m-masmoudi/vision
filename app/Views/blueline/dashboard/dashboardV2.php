@@ -49,34 +49,41 @@ $eventcount = $eventModel->getAllEvents();
     </div>
   <?php endif; ?>
 
-  <div class="grid__col-md-8">
+  <div class="grid__col-md-9">
     <div class="grid">
-      <div class="grid__col-6">
+      <div class="grid__col-md-3 ">
         <div class="tile-base tile-with-icon">
-          <div class="tile-icon hidden-md hidden-xs"><i class="ion-ios-analytics-outline"></i></div>
-          <div class="tile-small-header">
-            <?= lang('application.application_' . $view_data['month']); ?> <?= lang('application.application_payments'); ?>
+          
+          <div class="card-heading d-flex align-items-center justify-content-between gap-1 ">
+            <div class="tile-small-header">
+              <?= lang('application.application_' . $view_data['month']); ?> <?= lang('application.application_payments'); ?>
+            </div>
+              <div class="tile-icon hidden-md hidden-xs"><i class="ion-ios-analytics-outline"></i></div>
           </div>
-          <div class="tile-body">
-            <div class="number"><?= $view_data['payments'] ?? 0; ?></div>
+            <div class="tile-body">
+              <div class="number"><?= $view_data['payments'] ?? 0; ?></div>
+            </div>
           </div>
-        </div>
       </div>
 
-      <div class="grid__col-6">
+      <div class="grid__col-md-3">
         <div class="tile-base">
-          <div class="tile-icon hidden-md hidden-xs"><i class="ion-ios-information-outline"></i></div>
-          <div class="tile-small-header"><?= lang('application.application_total_outstanding'); ?></div>
+        <div class="card-heading d-flex align-items-center justify-content-between gap-1">
+        <div class="tile-small-header"><?= lang('application.application_total_outstanding'); ?></div>
+        <div class="tile-icon hidden-md hidden-xs"><i class="ion-ios-information-outline"></i></div>
+        </div>
           <div class="tile-body">
             <div class="number"><?= $view_data['paymentsOutstandingMonth'] ?? 0; ?></div>
           </div>
         </div>
       </div>
 
-      <div class="grid__col-6">
+      <div class="grid__col-md-3">
         <a href="<?= base_url(); ?>projects/filter/open" class="tile-base">
-          <div class="tile-icon hidden-md hidden-xs"><i class="ion-ios-lightbulb-outline"></i></div>
+        <div class="card-heading d-flex align-items-center justify-content-between gap-1">
           <div class="tile-small-header"><?= lang('application.application_open_projects'); ?></div>
+          <div class="tile-icon hidden-md hidden-xs"><i class="ion-ios-lightbulb-outline"></i></div>
+        </div>
           <div class="tile-body">
             <?= $projects_open; ?><small> / <?= $projects_all; ?></small>
           </div>
@@ -88,10 +95,13 @@ $eventcount = $eventModel->getAllEvents();
         </a>
       </div>
 
-      <div class="grid__col-6">
+      <div class="grid__col-md-3">
         <a href="<?= base_url(); ?>invoices/filter/open" class="tile-base">
-          <div class="tile-icon hidden-md hidden-xs"><i class="ion-ios-paper-outline"></i></div>
+        <div class="card-heading d-flex align-items-center justify-content-between gap-1">
+
           <div class="tile-small-header"><?= lang('application.application_open_invoices_dashboard'); ?></div>
+          <div class="tile-icon hidden-md hidden-xs"><i class="ion-ios-paper-outline"></i></div>
+        </div>
           <div class="tile-body">
             <?= $invoices_open; ?><small> / <?= $invoices_all; ?></small>
           </div>
@@ -105,7 +115,7 @@ $eventcount = $eventModel->getAllEvents();
     </div>
   </div>
 
-  <div class="grid__col-md-4">
+  <div class="grid__col-md-3">
     <div class="stdpad stdpad--calendar">
       <div class="table-head">
         <?= lang('application.application_calendar'); ?>

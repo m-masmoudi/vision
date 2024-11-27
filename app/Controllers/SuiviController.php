@@ -2,22 +2,22 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use App\Models\UserModel;
-use App\Models\SalarieModel;
 use DateTime;
 use IntlDateFormatter;
+use App\Models\UserModel;
+use App\Models\SalarieModel;
+use App\Controllers\BaseController;
 
 class SuiviController extends BaseController
 {
-    private array $submenu;
-    private IntlDateFormatter $_week_day_format;
 
-    public function __construct(
-        private UserModel $userModel,
-        private SalarieModel $salarieModel
-    ) {
+    private IntlDateFormatter $_week_day_format;
+    private UserModel $userModel2;
+    private SalarieModel $salarieModel;
+    public function __construct() {
         $this->initialize();
+        $this->userModel2=new UserModel();
+        $this->salarieModel=new SalarieModel();
         $this->_week_day_format = new IntlDateFormatter(
             'en_US.UTF8',
             IntlDateFormatter::NONE,
@@ -30,37 +30,26 @@ class SuiviController extends BaseController
 
     private function initialize(): void
     {
-        $this->submenu = [
-            $this->lang->line('application_all') => 'projects/filter/all',
-            $this->lang->line('application_open') => 'projects/filter/open',
-            $this->lang->line('application_closed') => 'projects/filter/closed',
+        $this->view_data['submenu'] = [
+            lang('application.application_all') => 'projects/filter/all',
+            lang('application.application_open') => 'projects/filter/open',
+            lang('application.application_closed') => 'projects/filter/closed',
         ];
 
-        $this->handleRedirects();
+       
     }
 
-    private function handleRedirects(): void
-    {
-        if ($this->client) {
-            $link = $this->input->cookie('fc2_link') ?: 'cprojects';
-            return redirect(str_replace("/tickets/", "/ctickets/", $link));
-        }
-        
-        if ($this->user && !$this->hasAccessToCalendar()) {
-            return redirect('login');
-        }
-        
-        return redirect('login');
-    }
+  
 
     private function hasAccessToCalendar(): bool
     {
         return !empty(array_filter($this->view_data['menu'], fn($item) => $item->link === "calendar"));
     }
 
-    public function index(): void
+    public function index()
     {
-        $ida = $this->user->salaries_id;
+      
+        $ida = $this->user['salaries_id'];
         $year = intval($this->request->getGet('year') ?: date('Y'));
         $month = intval($this->request->getGet('month') ?: date('m'));
         $department = $this->request->getGet('department');
@@ -83,10 +72,10 @@ class SuiviController extends BaseController
         ];
 
         if ($ida !== null) {
-            $this->view_data['dataa'] = $this->userModel->idsal($ida);
+            $this->view_data['dataa'] = $this->userModel2->idsal($ida);
         }
 
-        $this->content_view = 'suivi/index';
+        return  view('blueline/suivi/index',['view_data'=>$this->view_data]);
     }
 
     private function getSalariesByDepartment(?string $department): array
@@ -102,41 +91,47 @@ class SuiviController extends BaseController
     private function fetchEvents(int $year, int $month): array
     {
         return $this->db->table('saisie_temps')
-            ->select('DISTINCT users.salaries_id, ticket_par_defaults.code, saisie_temps.heures_pointees, saisie_temps.date, saisie_temps.autre_saisie')
-            ->join('ticket_par_defaults', 'ticket_par_defaults.id = saisie_temps.ticket_id', 'left')
-            ->join('users', 'saisie_temps.utilisateur_id = users.id', 'left')
-            ->where('YEAR(saisie_temps.date)', $year)
-            ->where('MONTH(saisie_temps.date)', $month)
-            ->where('saisie_temps.heures_pointees !=', 0.00)
-            ->orderBy('salaries_id, date')
-            ->get()->getResult();
+        ->distinct() // Apply DISTINCT
+        ->select('users.salaries_id, ticket_par_defaults.code, saisie_temps.heures_pointees, saisie_temps.date, saisie_temps.autre_saisie')
+        ->join('ticket_par_defaults', 'ticket_par_defaults.id = saisie_temps.ticket_id', 'left') // Join ticket_par_defaults
+        ->join('users', 'saisie_temps.utilisateur_id = users.id', 'left') // Join users
+        ->where('YEAR(saisie_temps.date)', $year) // Filter by year
+        ->where('MONTH(saisie_temps.date)', $month) // Filter by month
+        ->where('saisie_temps.heures_pointees !=', 0.00) // Filter non-zero heures_pointees
+        ->orderBy('users.salaries_id, saisie_temps.date') // Order by salaries_id and date
+        ->get()
+        ->getResultArray(); // Get the result as an array
     }
 
     private function fetchSaisies(int $year, int $month): array
     {
         return $this->db->table('saisie_temps')
-            ->select('DISTINCT ticket_par_defaults.code, saisie_temps.heures_pointees, users.salaries_id, saisie_temps.date')
-            ->join('users', 'users.id = saisie_temps.utilisateur_id', 'left')
-            ->join('ticket_par_defaults', 'ticket_par_defaults.id = saisie_temps.ticket_id', 'left')
-            ->where('YEAR(saisie_temps.date)', $year)
-            ->where('MONTH(saisie_temps.date)', $month)
-            ->where('saisie_temps.heures_pointees !=', 0.00)
-            ->groupBy('ticket_par_defaults.code')
-            ->get()->getResult();
+            ->distinct() // Apply DISTINCT to the query
+            ->select('ticket_par_defaults.code, saisie_temps.heures_pointees, users.salaries_id, saisie_temps.date')
+            ->join('users', 'users.id = saisie_temps.utilisateur_id', 'left') // Join users table
+            ->join('ticket_par_defaults', 'ticket_par_defaults.id = saisie_temps.ticket_id', 'left') // Join ticket_par_defaults
+            ->where('YEAR(saisie_temps.date)', $year) // Filter by year
+            ->where('MONTH(saisie_temps.date)', $month) // Filter by month
+            ->where('saisie_temps.heures_pointees !=', 0.00) // Exclude zero heures_pointees
+            ->groupBy('ticket_par_defaults.code, saisie_temps.heures_pointees, users.salaries_id, saisie_temps.date') // Group to prevent ambiguity
+            ->get()
+            ->getResultArray(); // Fetch results as an array
     }
 
     private function fetchTickets(int $year, int $month): array
     {
         return $this->db->table('saisie_temps')
-            ->select('DISTINCT users.salaries_id, saisie_temps.date, tickets.subject, saisie_temps.heures_pointees')
-            ->join('tickets', 'tickets.id = saisie_temps.ticket_id', 'left')
-            ->join('users', 'saisie_temps.utilisateur_id = users.id', 'left')
-            ->where('YEAR(saisie_temps.date)', $year)
-            ->where('MONTH(saisie_temps.date)', $month)
-            ->where('tickets.id >', 15)
-            ->where('saisie_temps.heures_pointees !=', 0.00)
-            ->orderBy('salaries_id, date')
-            ->get()->getResult();
+            ->distinct() // Apply DISTINCT to the query
+            ->select('users.salaries_id, saisie_temps.date, tickets.subject, saisie_temps.heures_pointees')
+            ->join('tickets', 'tickets.id = saisie_temps.ticket_id', 'left') // Join tickets table
+            ->join('users', 'saisie_temps.utilisateur_id = users.id', 'left') // Join users table
+            ->where('YEAR(saisie_temps.date)', $year) // Filter by year
+            ->where('MONTH(saisie_temps.date)', $month) // Filter by month
+            ->where('tickets.id >', 15) // Filter tickets with id > 15
+            ->where('saisie_temps.heures_pointees !=', 0.00) // Exclude zero heures_pointees
+            ->orderBy('users.salaries_id, saisie_temps.date') // Order by salaries_id and date
+            ->get()
+            ->getResultArray(); // Fetch results as an array
     }
 
     private function fetchProjets(int $year, int $month): array

@@ -2,14 +2,14 @@
 
 namespace App\Controllers;
 
-use App\Models\SubscriptionHasItemModel;
-use App\Models\SubscriptionModel;
-use App\Models\CompanyModel;
-use App\Models\SettingModel;
-use App\Models\FactureModel;
 use App\Models\ItemsModel;
-
+use App\Models\CompanyModel;
+use App\Models\FactureModel;
+use App\Models\SettingModel;
+use App\Models\SubscriptionModel;
 use App\Controllers\BaseController;
+
+use App\Models\SubscriptionHasItemModel;
 
 class SubscriptionsController extends BaseController
 {
@@ -30,29 +30,14 @@ class SubscriptionsController extends BaseController
 		$this->itemModel = new ItemsModel();
 		$this->SubscriptionHasItemModel = new SubscriptionHasItemModel();
 
-		if (!session()->get('user') || session()->get('user')->admin !== 1) {
-			return redirect()->to('login');
-		}
-
-		if (session()->get('client')) {
-			return redirect()->to('cprojects');
-		}
-
-		$this->checkAccess();
+		
 	}
 
-	private function checkAccess()
-    {
-        $access = array_filter($this->view_data['menu'], fn($item) => $item->link === "items") ||
-                  array_filter($this->view_data['submenuRight'], fn($item) => $item->link === "items");
 
-        if (!$access) {
-            return redirect()->to('login');
-        }
-    }
 	public function index()
     {
-        $subscriptions = $this->user->admin === 1
+       
+        $subscriptions = $this->user['admin'] === 1
             ? $this->subscriptionModel->findAll(['id_vcompanies' => session()->get('current_company')])
             : $this->getUserSubscriptions();
 
@@ -63,13 +48,15 @@ class SubscriptionsController extends BaseController
         }
 
         $this->view_data['subscriptions'] = $subscriptions;
-        return view('subscriptions/all', $this->view_data);
+        return view('blueline/subscriptions/all', ['view_data'=>$this->view_data]);
     }
 
 	private function getUserSubscriptions()
     {
-        $companyIds = array_map(fn($company) => $company->id, (array) $this->user->companies);
-        return $this->subscriptionModel->whereIn('company_id', $companyIds)
+        // var_dump($this->user);
+        // die;
+        $companyIds =session()->get('current_company');
+        return $this->subscriptionModel->where('company_id', $companyIds)
             ->where('id_vcompanies', session()->get('current_company'))
             ->findAll();
     }
@@ -153,7 +140,7 @@ class SubscriptionsController extends BaseController
         return $this->loadUpdateView($id);
     }
 
-	private function processUpdate($id): void
+	private function processUpdate($id)
     {
         $data = $this->request->getPost();
         unset($data['send'], $data['files'], $data['_wysihtml5_mode']);

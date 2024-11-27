@@ -1,7 +1,4 @@
 <?php
-
-namespace App\Helpers;
-
 use CodeIgniter\HTTP\Exceptions\HTTPException;
 
 if (!function_exists('valid_email')) {

@@ -28,7 +28,7 @@
     <div class="col-md-7">
         <div class="btn-group pull-right MarginTop MarginRight" role="group" aria-label="Basic example">
             <?php if(isset($paie_calcule_avant)) : ?>
-                <button type="button" class="btn btn-danger delete po" data-toggle="popover" data-placement="left"
+                <button type="button" class="btn btn-danger delete po" data-bs-toggle="popover" data-placement="left"
                         data-content="
                                                  <a class='btn btn-danger po-delete ajax-silent'
                                                     href='<?php echo site_url().'/gestionpaie/calculerpaie/'.$annee.'/'.$mois; ?>') ?>

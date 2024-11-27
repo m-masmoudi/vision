@@ -45,11 +45,13 @@ class RefTypeOccurencesModel extends Model
      */
     public function getReferentielsByIdType($id)
     {
-        return $this->select('id, id_type_occ, name, description')
-            ->where('id_type', $id)
-            ->where('visible', 1)
-            ->orderBy('id', 'desc')
-            ->findAll();
+        return $this->db->table($this->table)
+                    ->select('*')
+                    ->where('id_type', $id)
+                    ->where('visible', 1)
+                    ->orderBy('id', 'desc')
+                    ->get()
+                    ->getResultArray();
     }
 
     /**

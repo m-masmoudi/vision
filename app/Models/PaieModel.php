@@ -101,4 +101,24 @@ class PaieModel extends Model
 	{
 		return $this->db->table('param_rh_paie')->get()->getResult();
 	}
+
+	public function paieAnnee($annee)
+{
+    $query = $this->db->table('tpasa_paie')
+        ->select([
+            'MONTH(Paie_au) as mois_paie',
+            'COUNT(salaries_id) as count_salarie',
+            'SUM(salaire_brut) as sum_brut',
+            'SUM(salaire_imposable) as sum_net',
+            'SUM(cotisation_cnss) as sum_cnss',
+            'SUM(impot_revenue) as sum_irpp'
+        ])
+        ->where('YEAR(Paie_au)', $annee)
+        ->where('YEAR(Paie_du)', $annee)
+        ->groupBy('MONTH(Paie_au)')
+        ->orderBy('mois_paie', 'asc')
+        ->get();
+    
+    return $query->getResult();
+}
 }

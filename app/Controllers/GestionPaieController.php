@@ -2,21 +2,15 @@
 
 namespace App\Controllers;
 
+use App\Libraries\PDF;
 use App\Models\PaieModel;
-use CodeIgniter\Controller;
-use App\Libraries\PDF; // Adjust this line based on your PDF library
+use App\Controllers\BaseController; // Adjust this line based on your PDF library
 
-class GestionPaieController extends Controller
+class GestionPaieController extends BaseController
 {
     protected $paieModel;
 
-    private array $PARAM_IRPP = [
-        'limite_50k' => ['quota' => 50000, 'quota_produit' => 0.35, 'quota_somme' => 13100],
-        'limite_30k' => ['quota' => 30000, 'quota_produit' => 0.32, 'quota_somme' => 6700],
-        'limite_20k' => ['quota' => 20000, 'quota_produit' => 0.28, 'quota_somme' => 3900],
-        'limite_5k' => ['quota' => 5000, 'quota_produit' => 0.26, 'quota_somme' => 0],
-        'limite_0k' => ['quota' => 0, 'quota_produit' => 0, 'quota_somme' => 0]
-    ];
+ 
 
     public function __construct()
     {
@@ -30,24 +24,24 @@ class GestionPaieController extends Controller
     public function index()
     {
         $annee = $this->request->getPost('annee') ?? date("Y");
-        $data['paies'] = $this->paieModel->paieAnnee($annee);
-        $data['libelleMois'] = libelleMois();
-        $data['annee'] = $annee;
-        $data['selectYears'] = range(2017, 2021);
-        $data['backlink'] = "gestionpaie/paiemois/";
-        return view('rhpaie/paie/viewpaie', $data);
+        $this->view_data['paies'] = $this->paieModel->paieAnnee($annee);
+        $this->view_data['libelleMois'] = libelleMois();
+        $this->view_data['annee'] = $annee;
+        $this->view_data['selectYears'] = range(2017, 2021);
+        $this->view_data['backlink'] = "gestionpaie/paiemois/";
+        return view('blueline/rhpaie/paie/viewpaie', ['view_data'=>$this->view_data]);
     }
 
     public function paiemois()
     {
-        $data['title'] = "Choisir le mois de la paie";
-        $data['form_action'] = 'gestionpaie/creerpaie/';
-        $data['libelleMonth'] = libelleMois();
-        $data['selectYears'] = range(2017, 2021);
-        $data['annee'] = date("Y");
-        $data['mois'] = date("m");
+        $this->view_data['title'] = "Choisir le mois de la paie";
+        $this->view_data['form_action'] = 'gestionpaie/creerpaie/';
+        $this->view_data['libelleMonth'] = libelleMois();
+        $this->view_data['selectYears'] = range(2017, 2021);
+        $this->view_data['annee'] = date("Y");
+        $this->view_data['mois'] = date("m");
 
-        return view('rhpaie/paie/selectmois', $data);
+        return view('rhpaie/paie/selectmois', ['view_data'=>$this->view_data]);
     }
 
     public function afficher($paie_calcule_avant, $mois, $annee)

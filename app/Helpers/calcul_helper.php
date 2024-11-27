@@ -1,11 +1,9 @@
 <?php
-
-namespace App\Helpers;
-
-use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Services;
+use CodeIgniter\HTTP\ResponseInterface;
 
-
+// var_dump('im here');
+// die();
 
 if (!function_exists('calcul_heure')) {
     function calcul_heure(array $subj): array

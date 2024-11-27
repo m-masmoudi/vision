@@ -51,9 +51,15 @@ class SalarieModel extends Model
 
     public function idsal($ids)
     {
-        return $this->where('id', $ids)
+        // Ensure the 'id' column is from the correct table and select the specific column
+        $result = $this->db->table($this->table) // Define the table explicitly
+            ->where('id', $ids)
             ->select('seraffectation')
-            ->first()->seraffectation ?? null;
+            ->get()
+            ->getRow(); // Fetch a single row as an object
+    
+        // Return the seraffectation value if available, or null
+        return $result->seraffectation ?? null;
     }
 
     // Récupérer info salarié
@@ -239,18 +245,21 @@ class SalarieModel extends Model
     {
         return $this->selectMax('id')->first()->id ?? null;
     }
-
     public function getcalendersalaries()
     {
-        $idss = $this->user->salaries_id;
-        $naturename = $this->user->nature;
-
-        return $this->db->query("
-            SELECT id, id_salarie, date, description, nature, etat 
-            FROM calendar_salarie
-            WHERE id_salarie = $idss OR nature = '$naturename'
-            ORDER BY date DESC
-        ")->getResult();
+        // Get the salaries_id from the user model or session
+        $salarieId = session()->get('user')['salaries_id'];
+    
+        // Get the nature name using the idsal method
+        $natureName = $this->idsal($salarieId);
+    
+        // Query the database using the query builder
+        return $this->db->table($this->table)
+            ->select('*')
+            ->where('etat', '1')
+            ->where('seraffectation', $natureName)
+            ->get()
+            ->getResultArray();
     }
 
     public function getcalendersalaries2()

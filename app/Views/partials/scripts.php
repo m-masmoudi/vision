@@ -1,71 +1,107 @@
 <!-- Bootstrap core JavaScript -->
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/bootstrap.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/jquery-ui-1.10.3.custom.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<!-- Plugins -->
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/bootstrap-colorpicker.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/jquery.knob.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/summernote.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/chosen.jquery.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/blueline/js/bootstrap.min.js') ?>">
+<!-- Combined JavaScript at the End of Body -->
 
+<!-- Font Awesome -->
 
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/datatables.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/jquery.nanoscroller.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/jqBootstrapValidation.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/nprogress.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/3.4.0/js/bootstrap-colorpicker.min.js"></script>
+
 <script type="text/javascript"
     src="<?= base_url() ?>assets/blueline/js/plugins/jquery-labelauty.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+<!-- jQuery Knob -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-knob/1.2.13/jquery.knob.min.js"></script>
+
+<!-- Chosen (jQuery plugin for select boxes) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+
+<!-- jqBootstrapValidation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqBootstrapValidation/1.3.7/jqBootstrapValidation.min.js"></script>
+
+<!-- NProgress (Progress Bar) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+
+<!-- Validator.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
+
+<!-- Timer (jQuery Timer) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/timer.jquery/1.0.1/timer.jquery.min.js"></script>
+
+
+<!-- Velocity.js (for animations) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/velocity/2.0.6/velocity.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/velocity/2.0.6/velocity.ui.min.js"></script>
+
+<!-- Chart.js -->
 <script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/validator.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+    src="<?= base_url() ?>assets/blueline/js/plugins/chart.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+
+<!-- Inputmask Bundle -->
 <script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/timer.jquery.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+    src="<?= base_url() ?>assets/blueline/js/plugins/jquery.inputmask.bundle.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+
+
+<!-- jQuery GanttView -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-gantt-view/1.1.0/jquery.ganttView.min.js"></script>
+
+<!-- Dropzone.js (File Upload) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+
+<!-- Flatpickr (Date Picker) -->
+<script type="text/javascript"
+    src="<?= base_url() ?>assets/blueline/js/plugins/flatpickr.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+
+<!-- Bootstrap Editable (for inline editing) -->
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap-editable/js/bootstrap-editable.min.js"></script>
+
+<!-- Blazy.js (Lazy Loading) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/blazy/1.8.2/blazy.min.js"></script>
+
+<script src="<?= base_url() ?>assets/blueline/css/super-panel.js"></script>
+<script src="<?= base_url() ?>assets/blueline/css/accordion-menu.js"></script>
+<script src="<?= base_url() ?>assets/blueline/js/message.js"></script>
+
+<!-- Plugins -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.18/summernote.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/velocity/2.0.6/velocity.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/velocity/2.0.6/velocity.ui.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+<script type="text/javascript"
+    src="<?= base_url() ?>assets/blueline/js/plugins/countUp.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/blazy/1.8.2/blazy.min.js"></script>
+
 <script type="text/javascript"
     src="<?= base_url() ?>assets/blueline/js/plugins/jquery.easypiechart.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
 <script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/velocity.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/velocity.ui.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+    src="<?= base_url() ?>assets/blueline/js/plugins/jquery.nanoscroller.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+
 <script type="text/javascript"
     src="<?= base_url() ?>assets/blueline/js/plugins/moment-with-locales.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/chart.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/countUp.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/jquery.inputmask.bundle.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+<!-- FullCalendar JavaScript -->
 <script type="text/javascript"
     src="<?= base_url() ?>assets/blueline/js/plugins/fullcalendar/fullcalendar.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
 <script type="text/javascript"
     src="<?= base_url() ?>assets/blueline/js/plugins/fullcalendar/gcal.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
 <script type="text/javascript"
     src="<?= base_url() ?>assets/blueline/js/plugins/fullcalendar/lang-all.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/jquery.ganttView.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/dropzone.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/flatpickr.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/bootstrap-editable.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/plugins/blazy.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+
+
 <!--<script type="text/javascript" src="<?= base_url() ?>assets/blueline/js/plugins/jquery.sparkline.min.js?ver=<?= $view_data['core_settings']['version']; ?>"></script> -->
 
 <!-- Blueline Js -->
-<script type="text/javascript"
-    src="<?= base_url() ?>assets/blueline/js/blueline.js?ver=<?= $view_data['core_settings']['version']; ?>"></script>
+<script type="text/javascript" src="<?= base_url() ?>assets/blueline/js/blueline.js"></script>
 
 
 <script type="text/javascript" charset="utf-8">
+
     function afficheMenu(obj) {
 
         var idMenu = obj.id;

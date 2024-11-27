@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class VCompanieModel extends Model
 {
-    protected $table = 'companies'; // Define the table name
+    protected $table = 'v_companies'; // Define the table name
     protected $primaryKey = 'id'; // Define the primary key
     protected $allowedFields = [
         'reference',

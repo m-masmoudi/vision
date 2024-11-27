@@ -2,18 +2,19 @@
 
 namespace App\Controllers;
 
-use App\Models\SalarieModel;
+use Config\OccConfig;
 use App\Models\CongesModel;
-use App\Models\RefTypeOccurencesModel;
+use App\Models\SalarieModel;
 use CodeIgniter\Email\Email;
-use CodeIgniter\Controller;
+use App\Controllers\BaseController;
+use App\Models\RefTypeOccurencesModel;
 
-class GestionCongeController extends Controller
+class GestionCongeController extends BaseController
 {
     protected SalarieModel $salariesModel;
     protected CongesModel $congesModel;
     protected RefTypeOccurencesModel $referentielsModel;
-    protected array $view_data = [];
+    protected $config;
 
     public function __construct()
     {
@@ -21,6 +22,7 @@ class GestionCongeController extends Controller
         $this->salariesModel = new SalarieModel();
         $this->congesModel = new CongesModel();
         $this->referentielsModel = new RefTypeOccurencesModel();
+        $this->config=new OccConfig();
 
 
         // Check user authentication
@@ -33,13 +35,25 @@ class GestionCongeController extends Controller
     {
         // Fetch all salaries and conges
         $this->view_data['salaries'] = $this->salariesModel->findAll();
-        $this->view_data['conges'] = $this->filterCongesByStatut($this->request->getGet('statut'));
+        $statut = $this->request->getGet('statut');
+
+        if ($statut) {
+            // Filter Conges by 'statut'
+            $this->view_data['conges'] = $this->filterCongesByStatut($statut);
+        } else {
+            // Fetch all Conges if 'statut' is not provided
+            $this->view_data['conges'] = $this->congesModel->findAll();
+           
+        }
+        
+        
+      
 
         // Fetch reference data
-        $this->view_data['motif'] = $this->referentielsModel->getReferentielsByIdType(config('App')->type_id_motif_absence);
-        $this->view_data['statut'] = $this->referentielsModel->getReferentielsByIdType(config('App')->type_id_statut_conges);
+        $this->view_data['motif'] = $this->referentielsModel->getReferentielsByIdType($this->config->type_id_motif_absence );
+        $this->view_data['statut'] = $this->referentielsModel->getReferentielsByIdType($this->config->type_id_statut_conges );
 
-        return view("blueline/rhpaie/all");
+        return view("blueline/rhpaie/all",['view_data'=>$this->view_data]);
     }
 
     private function filterCongesByStatut(?string $statut): array

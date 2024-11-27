@@ -6,8 +6,8 @@ use CodeIgniter\Model;
 
 class SettingModel extends Model
 {
-    protected $table = 'setting_document_rh'; // You can modify this based on your actual table
-    protected $primaryKey = 'id_setting_rh';
+    protected $table = 'core'; // You can modify this based on your actual table
+    protected $primaryKey = 'id';
 
     protected $allowedFields = [
         'logo_fiche_paie',

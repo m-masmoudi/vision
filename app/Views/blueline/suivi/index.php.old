@@ -27,7 +27,7 @@
             <a href="<?php echo site_url('suivi/edit/'.$data['year'].'/'. $data['month_next']); ?>" class="btn btn-light btn-sm" >
             Next month<span class="mr-2">>></span>
             </a>
-                <button type="button" class="btn btn-light btn-sm last-in-row" onclick="select();" data-toggle="popover"><img src="<?php echo base_url('./assets/suivi/img/icon1.png'); ?>" class="icon small"></img><span>Select...</span> </button>
+                <button type="button" class="btn btn-light btn-sm last-in-row" onclick="select();" data-bs-toggle="popover"><img src="<?php echo base_url('./assets/suivi/img/icon1.png'); ?>" class="icon small"></img><span>Select...</span> </button>
                 </div>
           
                 <!------CALENDRES--->
@@ -57,7 +57,7 @@
                             
                                 <div class="name-column" >
                                 <div class="name-wrap">
-                                <span class="name itemname" data-toggle="popover"
+                                <span class="name itemname" data-bs-toggle="popover"
                         data-placement="right"
                         data-trigger="focus" 
                         data-html="true"
@@ -242,7 +242,7 @@ $(document).ready(function(){
                             '<div class="item">'+
                                '<div class="name-column">'+
                                 '<div class="name-wrap">'+
-                                '<span class="name itemname" data-toggle="popover" data-placement="right" data-trigger="focus" data-html="true" data-title ="<?php echo($user->nom .' '.$user->prenom) ?>" data-ville ="<?php echo($user->ville) ?>"  data-affectation ="<?php echo($user->seraffectation) ?>"  data-file ="<?php echo($user->file); ?>" data-phone ="<?php echo($user->tel1) ?>"><?php echo get_salaries_icon($user->genre)?><?php echo($user->nom .' '.$user->prenom) ?></span>'+
+                                '<span class="name itemname" data-bs-toggle="popover" data-placement="right" data-trigger="focus" data-html="true" data-title ="<?php echo($user->nom .' '.$user->prenom) ?>" data-ville ="<?php echo($user->ville) ?>"  data-affectation ="<?php echo($user->seraffectation) ?>"  data-file ="<?php echo($user->file); ?>" data-phone ="<?php echo($user->tel1) ?>"><?php echo get_salaries_icon($user->genre)?><?php echo($user->nom .' '.$user->prenom) ?></span>'+
                                '</div>'+
                                  '</div>'+
                                  '<div class="days">'+
@@ -310,7 +310,7 @@ $(this).popover({
                             '<div class="item">'+
                                '<div class="name-column">'+
                                 '<div class="name-wrap">'+
-                                '<span class="name itemname" data-toggle="popover"  data-file ="<?php echo($user->file); ?>" data-placement="right" data-trigger="focus" data-html="true" data-title ="<?php echo($user->nom .' '.$user->prenom) ?>" data-ville ="<?php echo($user->ville) ?>"  data-affectation ="<?php echo($user->seraffectation) ?>"  data-phone ="<?php echo($user->tel1) ?>"><?php echo get_salaries_icon($user->genre)?><?php echo($user->nom .' '.$user->prenom) ?></span>'+
+                                '<span class="name itemname" data-bs-toggle="popover"  data-file ="<?php echo($user->file); ?>" data-placement="right" data-trigger="focus" data-html="true" data-title ="<?php echo($user->nom .' '.$user->prenom) ?>" data-ville ="<?php echo($user->ville) ?>"  data-affectation ="<?php echo($user->seraffectation) ?>"  data-phone ="<?php echo($user->tel1) ?>"><?php echo get_salaries_icon($user->genre)?><?php echo($user->nom .' '.$user->prenom) ?></span>'+
                                '</div>'+
                                  '</div>'+
                                  '<div class="days">'+
@@ -380,7 +380,7 @@ $(this).popover({
                             '<div class="item">'+
                                '<div class="name-column">'+
                                 '<div class="name-wrap">'+
-                                '<span class="name itemname" data-toggle="popover"  data-file ="<?php echo($user->file); ?>" data-placement="right" data-trigger="focus" data-html="true" data-title ="<?php echo($user->nom .' '.$user->prenom) ?>" data-ville ="<?php echo($user->ville) ?>"  data-affectation ="<?php echo($user->seraffectation) ?>"  data-phone ="<?php echo($user->tel1) ?>"><?php echo get_salaries_icon($user->genre)?><?php echo($user->nom .' '.$user->prenom) ?></span>'+
+                                '<span class="name itemname" data-bs-toggle="popover"  data-file ="<?php echo($user->file); ?>" data-placement="right" data-trigger="focus" data-html="true" data-title ="<?php echo($user->nom .' '.$user->prenom) ?>" data-ville ="<?php echo($user->ville) ?>"  data-affectation ="<?php echo($user->seraffectation) ?>"  data-phone ="<?php echo($user->tel1) ?>"><?php echo get_salaries_icon($user->genre)?><?php echo($user->nom .' '.$user->prenom) ?></span>'+
                                '</div>'+
                                  '</div>'+
                                  '<div class="days">'+
@@ -449,7 +449,7 @@ $(this).popover({
                             '<div class="item">'+
                                '<div class="name-column">'+
                                 '<div class="name-wrap">'+
-                                '<span class="name itemname" data-toggle="popover"  data-file ="<?php echo($user->file); ?>" data-placement="right" data-trigger="focus" data-html="true" data-title ="<?php echo($user->nom .' '.$user->prenom) ?>" data-ville ="<?php echo($user->ville) ?>"  data-affectation ="<?php echo($user->seraffectation) ?>"  data-phone ="<?php echo($user->tel1) ?>"><?php echo get_salaries_icon($user->genre)?><?php echo($user->nom .' '.$user->prenom) ?></span>'+
+                                '<span class="name itemname" data-bs-toggle="popover"  data-file ="<?php echo($user->file); ?>" data-placement="right" data-trigger="focus" data-html="true" data-title ="<?php echo($user->nom .' '.$user->prenom) ?>" data-ville ="<?php echo($user->ville) ?>"  data-affectation ="<?php echo($user->seraffectation) ?>"  data-phone ="<?php echo($user->tel1) ?>"><?php echo get_salaries_icon($user->genre)?><?php echo($user->nom .' '.$user->prenom) ?></span>'+
                                '</div>'+
                                  '</div>'+
                                  '<div class="days">'+

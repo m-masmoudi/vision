@@ -1,7 +1,12 @@
-<div id="row">
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('content') ?>
+<div class="row">
 	<div class="col-md-3">
 		<div class="list-group">
-			<?php foreach ($submenu as $name=>$value):
+
+			<?php
+			foreach ($view_data['submenu'] as $name=>$value):
+				//var_dump($value);die;
 			$badge = "";
 			$active = "";
 			if($value == "settings/updates" && $update_count){ $badge = '<span class="badge badge-success">'.$update_count.'</span>';}
@@ -9,32 +14,32 @@
 			   <a class="list-group-item <?=$active;?>"
 			   id="<?php $val_id = explode("/", $value); if(!is_numeric(end($val_id))){
 				   echo end($val_id);}else{$num = count($val_id)-2; echo $val_id[$num];
-				   } ?>" href="<?=site_url($value);?>"><?=$badge?> <?=$name?></a>
+				   } ?>" href="<?=site_url($value);?>"><?=$badge?> <?=lang('application.'.$name);?></a>
 			<?php endforeach;?>
 
 		</div>
 	</div>
 	<div class="col-md-9">
-		<div class="table-head"><?=$this->lang->line('application_settings');?></div>
+		<div class="table-head"><?=lang('application.application_settings');?></div>
 		<?php   
 		$attributes = array('class' => '', 'id' => 'settings_form');
-		echo form_open_multipart($form_action, $attributes); 
+		//echo form_open_multipart($form_action, $attributes); 
 		?>
 		<div class="table-div">	
 			<!-- infos générale -->
-			<div class="form-header"><?=$this->lang->line('application_general_info');?></div>
+			<div class="form-header"><?=lang('application.application_general_info');?></div>
 			<div class="row">
 				<div class="col-md-6">
 					<div class="form-group">
-						<label><?=$this->lang->line('application_email');?> *</label>
-						<input type="email" name="email" class="required form-control" value="<?=$settings->email;?>" required>
+						<label><?=lang('application.application_email');?> *</label>
+						<input type="email" name="email" class="required form-control" value="<?=$view_data['settings'][0]['email'];?>" required>
 					</div>
 				</div>
 				<div class="col-md-6">
 					<div class="form-group">
-						<label><?=$this->lang->line('application_domain');?> <button type="button" class="btn-option po pull-right" data-toggle="popover" data-placement="left" data-content="URL complète de votre installation vision ERP." data-original-title="URL"> <i class="fa fa-info-circle"></i></button>
+						<label><?=lang('application.application_domain');?> <button type="button" class="btn-option po pull-right" data-bs-toggle="popover" data-placement="left" data-content="URL complète de votre installation vision ERP." data-original-title="URL"> <i class="fa fa-info-circle"></i></button>
 						</label>
-						<input type="text" name="domain" class="required form-control" value="<?=$settings->domain;?>" disabled required>
+						<input type="text" name="domain" class="required form-control" value="<?=$view_data['settings'][0]['domain'];?>" disabled required>
 					</div>
 				</div>
 			</div>
@@ -42,60 +47,54 @@
 			<div class="row">
 				<div class="col-md-6">
 					<div class="form-group">
-						<label>Signataire des documents<button type="button" class="btn-option po pull-right" data-toggle="popover" data-placement="left" data-content="Nom de la personne responsable de signer les docuemnts administratifs." data-original-title="URL"> <i class="fa fa-info-circle"></i></button>
+						<label>Signataire des documents<button type="button" class="btn-option po pull-right" data-bs-toggle="popover" data-placement="left" data-content="Nom de la personne responsable de signer les docuemnts administratifs." data-original-title="URL"> <i class="fa fa-info-circle"></i></button>
 						</label>
-						<input type="text" name="signataire" class="form-control" value="<?=$settings->signataire;?>" >
+						<input type="text" name="signataire" class="form-control" value="<?=$view_data['settings'][0]['signataire'];?>" >
 					</div>
 				</div>
 			</div>
 		
 		<!-- Formats -->
-		<div class="form-header"><?=$this->lang->line('application_formats');?></div>
+		<div class="form-header"><?=lang('application.application_formats');?></div>
 		<div class="row">
 			<div class="col-md-6">
 				<div class="form-group">
-					<label for="currency"><?=$this->lang->line('application_default_currency');?></label>
+					<label for="currency"><?=lang('application.application_default_currency');?></label>
 						<div class="input-group col-md-12">
 						  <select name="currency" id="currency" class="chosen-select" onchange="myFunction()">
-							  <option value="<?=$settings->currency;?>"><?=$settings->currency;?></option>
-							  <?php foreach($currencys as $currency){
-								  if($settings->currency!=$currency->name){?>
-							  <option value="<?=$currency->name;?>"><?=$currency->name;?></option>
-							  <?php }}?>
+							  <option value="<?=$view_data['settings'][0]['currency'];?>"><?=$view_data['settings'][0]['currency'];?></option>
+
 						  </select> 
 						</div>
 				</div>
 			</div>
 			<div class="col-md-6">
 				<div class="form-group">
-					<label for="chiffre"><?=$this->lang->line('application_chiffre_apvergule');?></label>
-						<input type="number" name="chiffre" id="chiffre" min= "0" max = "5" class="form-control" value="<?=$settings->chiffre;?>"  disabled required>
+					<label for="chiffre"><?=lang('application.application_chiffre_apvergule');?></label>
+						<input type="number" name="chiffre" id="chiffre" min= "0" max = "5" class="form-control" value="<?=$view_data['settings'][0]['chiffre'];?>"  disabled required>
 				</div>
 			</div>
 		</div>
 		<div class="row">
 			<div class="col-md-6">
 				<div class="form-group">
-					<label for="echeances"><?=$this->lang->line('application_due_date');?></label>
+					<label for="echeances"><?=lang('application.application_due_date');?></label>
 						<div class="input-group col-md-12">
 						  <select name="echeance" id="echeances" class="chosen-select">
-						  <option value="<?=$settings->echeance;?>"><?=$this->lang->line('application_issue_date').' + '.$settings->echeance.' Jours';?></option>
-						  <?php foreach($echeances as $echeance){
-							  if($settings->echeance!=$echeance->name){?>
-						  <option value="<?=$echeance->name;?>"><?=$this->lang->line('application_issue_date').' + '.$echeance->name.' Jours';?></option>
-						  <?php }}?>
+						  <option value="<?=$view_data['settings'][0]['echeance'];?>"><?=lang('application.application_issue_date').' + '.$view_data['settings'][0]['echeance'].' Jours';?></option>
+						
 						  </select> 
 						</div>
 				</div>
 			</div>
 			<div class="col-md-6">
 					<div class="form-group">
-						<label><?=$this->lang->line('application_date_format');?></label>
+						<label><?=lang('application.application_date_format');?></label>
 						 <?php $options = array(
 							'Y/m/d'    => date("Y/m/d"),
 							'm/d/Y' => date("m/d/Y"),
 							'd/m/Y' => date("d/m/Y"));
-							echo form_dropdown('date_format', $options, $settings->date_format, 'style="width:250px" class="chosen-select"'); ?>
+							echo form_dropdown('date_format', $options, $view_data['settings'][0]['date_format'], 'style="width:250px" class="chosen-select"'); ?>
 						
 					</div>
 			</div>
@@ -103,105 +102,107 @@
 		<div class="row">
 			<div class="col-md-6">
 					<div class="form-group">
-						<label><?=$this->lang->line('application_date_time_format');?></label>
+						<label><?=lang('application.application_date_time_format');?></label>
 						 <?php $options = array(
 							'g:i a'  => date("g:i a"),
 							'H:i' => date("H:i")
 							);
-							echo form_dropdown('date_time_format', $options, $settings->date_time_format, 'style="width:250px" class="chosen-select"'); ?>
+							echo form_dropdown('date_time_format', $options, $view_data['settings'][0]['date_time_format'], 'style="width:250px" class="chosen-select"'); ?>
 						
 					</div>
 			</div>
 			<div class="col-md-6">
 				<div class="form-group">
-					<label><?=$this->lang->line('application_currency_position');?></label>
+					<label><?=lang('application.application_currency_position');?></label>
 					 <?php $options = array(
-						'1'  => $settings->currency." 100",
-						'2' => "100 ".$settings->currency
+						'1'  => $view_data['settings'][0]['currency']." 100",
+						'2' => "100 ".$view_data['settings'][0]['currency']
 						);
-						echo form_dropdown('money_currency_position', $options, $settings->money_currency_position, 'style="width:250px" class="chosen-select"'); ?>
+						echo form_dropdown('money_currency_position', $options, $view_data['settings'][0]['money_currency_position'], 'style="width:250px" class="chosen-select"'); ?>
 					
 				</div>
 			</div>
 		</div>
 		
 			<!-- logo -->
-			<div class="form-header"><?=$this->lang->line('application_logo');?></div>
+			<div class="form-header"><?=lang('application.application_logo');?></div>
 			<div class="row">
 			<div class="col-md-3">
 				<div class="form-group" style="padding: 20px 9px;">
-					<span><?=$this->lang->line('application_display_logo_facture');?></span><br><br>
-					<label class="switch" >
-						<?php if($settings->display_logo_facture==1){ ?>
-					<input type="checkbox" name="display_logo_facture" checked>
-					<?php	}else{ ?>  
-					<input type="checkbox" name="display_logo_facture">
+					<span><?=lang('application.application_display_logo_facture');?></span><br><br>
+					<div class="form-check form-switch">
+						<?php if($view_data['settings'][0]['display_logo_facture']==1){ ?>
+					<input class="form-check-input" type="checkbox"  name="display_logo_facture" role="switch"  checked>
+						<?php	}else{ ?>  
+						<input type="checkbox" name="display_logo_facture" class="form-check-input" role="switch">
 					<?php  } ?>
-					<div class="slider round"></div>
-					</label>
+
+					</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group" style="padding: 20px 9px;">
-					<span><?=$this->lang->line('application_display_logo_devis');?></span><br><br>
-					<label class="switch" >
+					<span><?=lang('application.application_display_logo_devis');?></span><br><br>
+					<div class="form-check form-switch">
 						<?php 
-						if($settings->display_logo_devis==1){ ?>
-						<input type="checkbox" name="display_logo_devis" checked>
+						if($view_data['settings'][0]['display_logo_devis']==1){ ?>
+
+						<input class="form-check-input" type="checkbox"  name="display_logo_devis" role="switch"  checked>
 						<?php	}else{ ?>  
-						<input type="checkbox" name="display_logo_devis">
+						<input type="checkbox" name="display_logo_devis" class="form-check-input" role="switch">
 						<?php  } ?>
-					<div class="slider round"></div>
-					</label>
+				
+						</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group" style="padding: 20px 9px;">
-					<span><?=$this->lang->line('application_display_logo_commande');?></span><br><br>
-					<label class="switch" >
-						<?php if($settings->display_logo_commande==1){ ?>
-						<input type="checkbox" name="display_logo_commande" checked>
+					<span><?=lang('application.application_display_logo_commande');?></span><br><br>
+					<div class="form-check form-switch">
+						<?php if($view_data['settings'][0]['display_logo_commande']==1){ ?>
+						
+						<input class="form-check-input" type="checkbox"  name="display_logo_commande" role="switch"  checked>
 						<?php	}else{ ?>  
-						<input type="checkbox" name="display_logo_commande">
+						<input type="checkbox" name="display_logo_commande" class="form-check-input" role="switch">
 						<?php  } ?>
-						<div class="slider round"></div>
-					</label>
+					
+						</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group" style="padding: 20px 9px;">
-					<span><?=$this->lang->line('application_display_logo_livraison');?></span><br><br>
-					<label class="switch" >
-						<?php if($settings->display_logo_livraison==1){ ?>
-						<input type="checkbox" name="display_logo_livraison" checked>
+					<span><?=lang('application.application_display_logo_livraison');?></span><br><br>
+					<div class="form-check form-switch">
+						<?php if($view_data['settings'][0]['display_logo_livraison']==1){ ?>
+						<input class="form-check-input" type="checkbox"  name="display_logo_livraison" role="switch"  checked>
 						<?php	}else{ ?>  
-						<input type="checkbox" name="display_logo_livraison">
+						<input type="checkbox" name="display_logo_livraison" class="form-check-input" role="switch">
 						<?php  } ?>
-					<div class="slider round"></div>
-					</label>
+					</div>
 				</div>
 			</div>
 			<!-- logo avoir -->
 			<div class="col-md-3">
 				<div class="form-group" style="padding: 20px 9px;">
-					<span><?=$this->lang->line('application_display_logo_avoir');?></span><br><br>
-					<label class="switch" >
-						<?php if($settings->display_logo_avoir==1){ ?>
-					<input type="checkbox" name="display_logo_avoir" checked>
+					<span><?=lang('application.application_display_logo_avoir');?></span><br><br>
+					<div class="form-check form-switch">
+						<?php if($view_data['settings'][0]['display_logo_avoir']==1){ ?>
+					<input class="form-check-input" type="checkbox" name="display_logo_avoir" role="switch"  checked>
 					<?php	}else{ ?>  
-					<input type="checkbox" name="display_logo_avoir">
+					<input type="checkbox" name="display_logo_avoir" class="form-check-input" role="switch">
 					<?php  } ?>
-					<div class="slider round"></div>
-					</label>
+					
+					</div>
+					
 				</div>
 			</div>
 	</div>
 		<div class="form-group no-border">
-			 <input type="submit" name="send" class="btn btn-primary" value="<?=$this->lang->line('application_save');?>"/>
+			 <input type="submit" name="send" class="btn btn-primary" value="<?=lang('application.application_save');?>"/>
 			
 		</div>
 	
-	<?php echo form_close(); ?>
+	<?php //echo form_close(); ?>
 	</div>
 	</div>
 
@@ -266,6 +267,15 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+.form-switch .form-check-input {
+  width: 4rem;
+  height: 2rem;
+}
+
+.form-check-input:checked {
+  background-color: #28bada;
+  border-color: #28bada;
+}
 </style>
 
 <script>
@@ -290,3 +300,4 @@ function myFunction() {
 }
   
 </script>
+<?= $this->endSection() ?>
