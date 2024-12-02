@@ -16,7 +16,7 @@ use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
 
 class Filters extends BaseFilters
-{
+{ 
     /**
      * Configures aliases for Filter classes to
      * make reading things nicer and simpler.
@@ -72,9 +72,8 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            // 'honeypot',
-            // 'csrf',
-            // 'invalidchars',
+            // Here you can add your global filters, for example:
+            'auth' => ['except' => ['login']],  // Exclude login, register, home pages from the filter
         ],
         'after' => [
             // 'honeypot',

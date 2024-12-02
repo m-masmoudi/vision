@@ -23,13 +23,13 @@ $message_icon = false;
 
 <?php if (isset($view_data['user_online']) && $act_uri != 'login' && $act_uri != 'forgotpass'): ?>
     <div class="content-area">
-    <?= $this->include('partials/subHeader') ?>
-<?php endif; ?>
+        <?= $this->include('partials/subHeader') ?>
+    <?php endif; ?>
 
 
     <?= $this->renderSection('content') ?>
 
-<?php if ($act_uri != 'login' && $act_uri != 'forgotpass'): ?>
+    <?php if ($act_uri != 'login' && $act_uri != 'forgotpass'): ?>
     </div> <!-- Close content-area div only if not login or forgotpass -->
 <?php endif; ?>
 

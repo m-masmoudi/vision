@@ -228,8 +228,8 @@ class SettingsController extends BaseController
 			}
 		} else {
 			if ($dest && $template) {
-				$THIS->DBdest = $dest . "_pdf_template";
-				$settings->updateAttributes([$THIS->DBdest => 'templates/' . $dest . '/' . $template]);
+				$this->DBdest = $dest . "_pdf_template";
+				$settings->updateAttributes([$this->DBdest => 'templates/' . $dest . '/' . $template]);
 				return redirect()->to('settings/invoice_templates');
 			} else {
 				$this->view_data['invoice_template_files'] = array_map(fn($file) => str_replace('.php', '', $file), get_filenames('./app/Views/' . $settings->template . '/templates/invoice/'));
@@ -721,13 +721,17 @@ class SettingsController extends BaseController
 
 		// Pass data to the view
 		$this->view_data['config'] = $data;
-		$this->view_data['breadcrumb'] = lang('application_smtp_settings');
+		$this->view_data['breadcrumb'] = lang('application.application_smtp_settings');
+		$this->view_data['breadcrumb_id'] = "smtpsettings";
 		$this->view_data['form_action'] = 'settings/smtp_settings/';
+		$this->view_data['form_action2'] = 'settings/sendTestMail/';
 		$this->view_data['settings'] = $this->settingTables
 			->where('id_vcompanies', $id)
 			->get()
 			->getResultArray();
 
+		//var_dump($this->view_data['config']);
+		//die;
 		// Load the view
 		return view('blueline/settings/smtp_settings', ["view_data" => $this->view_data]);
 	}
@@ -1324,28 +1328,28 @@ class SettingsController extends BaseController
 			$session->setFlashdata('message', 'success:' . lang('application.application_modified'));
 			return redirect()->to(base_url('settings/paiecnss'));
 		} else {
+
 			// Fetch outils
-			$this->view_data['outils'] = $this->db->table('ref_type_occurences')
-				->where('id_type', 19)
-				->where('id_vcompanie', (int) $session->get('current_company'))
-				->get()
-				->getResultArray();
+			$this->view_data['outils'] = $this->referentiels->getReferentielsByIdType(19);
 
-			// Fetch item
-			$item = $this->db->table('referentiels_rh_paies')
-				->where('id_companie', (int) $session->get('current_company'))
-				->get()
-				->getResultArray();
+			/*
+					 // Fetch item
+					 $item = $this->db->table('referentiels_rh_paies')
+						 ->where('id_companie', (int) $session->get('current_company'))
+						 ->get()
+						 ->getResultArray();
 
-			if (empty($item)) {
-				$this->db->table('referentiels_rh_paies')->insert(['id_companie' => (int) $session->get('current_company')]);
-				$item = $this->db->table('referentiels_rh_paies')
-					->where('id_companie', (int) $session->get('current_company'))
-					->get()
-					->getResultArray();
-			}
+					 /*if (empty($item)) {
+						 $this->db->table('referentiels_rh_paies')->insert(['id_companie' => (int) $session->get('current_company')]);
+						 $item = $this->db->table('referentiels_rh_paies')
+							 ->where('id_companie', (int) $session->get('current_company'))
+							 ->get()
+							 ->getResultArray();
+					 }
 
-			$this->view_data['item'] = $item;
+					 $this->view_data['item'] = $item;
+					 */
+			$this->view_data['item'] = '';
 			$idparam = $item[0]->id ?? null;
 
 			// Motif d'absence
@@ -1370,7 +1374,7 @@ class SettingsController extends BaseController
 
 			$this->view_data['idparam'] = $idparam;
 
-			return view('settings/paiecnss', ['view_data' => $this->view_data]);
+			return view('blueline/settings/paiecnss', ['view_data' => $this->view_data]);
 		}
 	}
 
@@ -1635,7 +1639,11 @@ class SettingsController extends BaseController
 		});
 
 		$option = ["id_vcompanies" => 2];
-		$this->view_data['defaultTemplate'] = $this->settingTables->find($option)->default_template;
+		//$this->view_data['defaultTemplate'] = $this->settingTables->find($option)->default_template;
+		$defaultTemplate = $this->settingTables->find($option);
+		$this->view_data['defaultTemplate'] = $defaultTemplate[0]['default_template'];
+		//var_dump($this->view_data['defaultTemplate']);
+		//die;
 		$this->view_data['files'] = array_map(function ($file) {
 			return pathinfo($file, PATHINFO_FILENAME);
 		}, $files);

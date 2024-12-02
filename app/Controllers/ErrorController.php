@@ -2,12 +2,12 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\Controller;
+use App\Controllers\BaseController;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
-class ErrorController extends Controller
+class ErrorController extends BaseController
 {
 	protected $session;
 	protected $user;
@@ -35,10 +35,18 @@ class ErrorController extends Controller
 		$currentURL = current_url();
 		$requestURI = service('request')->getUri();
 		$message = "Oops! The page at '" . $requestURI . "' could not be found.";
-		
+		$this->view_data['message'] = $message;
+		// Get the session instance
+        /*$session = \Config\Services::session();
+
+        // Check if user is logged in (you can adjust this check based on your app's authentication logic)
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }*/
+		//return view('blueline/settings/choiceTemplate', ['view_data' => $this->view_data]);
 		if (is_cli()) {
-			return view('errors/cli/error_404', ['message' => $message]);
+			return view('errors/cli/error_404', ['view_data' => $this->view_data]);
 		}
-		return view('errors/html/error_404', ['message' => $message]);
+		return view('errors/html/error_404', ['view_data' => $this->view_data]);
 	}
 }

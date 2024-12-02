@@ -91,16 +91,23 @@ class RefTypeOccurencesModel extends Model
      */
     public function getAllReferentielsByCodeType($code, $visible = true, $return_array = false)
     {
-        $this->select("{$this->table}.*")
-            ->join('ref_type', 'id_type = ref_type.id', 'inner')
-            ->where('ref_type.name', $code);
-
+        // Alias the main table and the joined table to avoid ambiguity
+        $builder = $this->builder();
+    
+        // Start building the query
+        $builder->select("{$this->table}.*, ref_type.name")  // Select necessary columns
+                ->join('ref_type', 'ref_type.id = ' . $this->table . '.id_type', 'inner')  // Proper join with table aliasing
+                ->where('ref_type.name', $code);  // Filter based on ref_type.name
+    
+        // Add condition for visibility if needed
         if ($visible) {
-            $this->where('visible', 1);
+            $builder->where("{$this->table}.visible", 1);  // Reference the 'visible' column with the table alias
         }
-
-        $query = $this->get();
-
+    
+        // Get the query result
+        $query = $builder->get();
+    
+        // If we need the results as an array with IDs as keys
         if ($return_array) {
             $array = [];
             foreach ($query->getResult() as $row) {
@@ -108,9 +115,11 @@ class RefTypeOccurencesModel extends Model
             }
             return $array;
         }
-
+    
+        // Otherwise, return the result as an object array
         return $query->getResult();
     }
+    
 
     /**
      * Get referentials by type ID with optional visibility
