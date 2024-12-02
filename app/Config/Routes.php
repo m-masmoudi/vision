@@ -16,7 +16,9 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
 */
 
 $routes->get('/lang/{locale}', 'Language::index');
-$routes->get('/', 'HomeController::index');
+$routes->get('/', function() {
+    return redirect()->to('/login');
+});
 // Set default controller and 404 override
 $routes->setDefaultController('DashboardController');
 $routes->set404Override('App\Controllers\ErrorController::error_404');

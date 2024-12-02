@@ -28,6 +28,10 @@ class AuthController extends BaseController
     }
     public function login()
     {
+        if (session()->get('user_id')) {
+            // Redirect to the login page if not logged in
+            return redirect()->to('/dashboard');
+        }
         $this->handlePasswordReset();
         $this->initializeVersionData();
         // if ($this->request->getMethod() === 'post') {
